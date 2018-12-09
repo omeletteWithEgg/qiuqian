@@ -1,0 +1,149 @@
+ <style lang="less" scoped>
+    .items{
+        width:100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+        position: relative;
+        .main-content{
+            height:180px;
+            position: relative;
+            .list-info{
+                position: absolute;
+                bottom:10px;
+                left:10px;
+                right:10px;
+                font-size: 10px;
+                line-height: 20px;
+                color:rgb(224, 224, 224);
+                .list-title{
+                    display: block;
+                    font-size:14px;
+                    color:#fff
+                }
+                .right-text{
+                    float:right
+                }
+            }
+            .status{
+                position:absolute;
+                left:0px;
+                top:10px;
+                border-radius:0 15px 15px 0;
+                color:#fff;
+                padding:1px 10px;
+                font-size:10px
+            }
+            .status.in{
+               background: rgb(247, 3, 125)
+            }
+            .status.close{
+                background:#666
+            }
+            .close-icon{
+                position:absolute;
+                right:10px;
+                top:10px;
+                
+
+            }
+        }
+        .bottom-content{
+            background: #fff;
+            border-radius:0 0 10px 10px;
+            color:#000;
+            font-size:12px;
+            padding:7px;
+            display: -webkit-flex;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .bottom-left{
+                image{
+                    display:inline-block;
+                    vertical-align:middle;
+                    margin-right: 10px;
+                }
+            }
+            
+        }
+    }
+</style>
+<template>
+        <block>
+            <view class="items">
+                <view class="main-content">
+                    <image class="bg-img" style="width: 100%; height: 100%; border-radius:10px 10px 0 0;" mode="scaleToFill" src="{{bgImg}}"> </image>
+                    <text class="status {{iconstatus}}"  wx:if="{{status}}">{{status}}</text>
+                    <icon class="close-icon" size="18" type="clear"></icon>
+                    <view class="list-info">
+                        <text class="list-title">{{title}}</text>
+                        <text class="date">{{startdate}}</text> 至 <text class="comment">{{enddate}}</text>
+                        <text class="right-text">{{righttext}}</text>
+                    </view>
+                </view>
+                <view class="bottom-content"  wx:if="{{bottomcontext}}">
+                    <view class="bottom-left">
+                        <image class="head-img" style="width:30px; height: 30px;border-radius:100% " mode="scaleToFill" src="{{headerImg}}"> </image>
+                        <text class="nick-name">{{nickname}}</text>
+                    </view>
+                    <view class="bottom-right"><text class="iconfont icon"></text><text>{{bottomtext}}</text></view>
+                </view>
+            </view>
+        </block>
+</template>
+<script>
+import wepy from 'wepy'
+export default class indexList extends wepy.component{
+
+    props = {
+        bgImg: {
+            type: String,
+            default: ''
+        },
+        status: {
+            type: String,
+            default: ''
+        },
+        enddate: {
+            type: String,
+            default: ''
+        },
+        startdate: {
+            type: String,
+            default: ''
+        },
+        iconstatus: {
+            type: String,
+            default: ''
+        },
+        righttext: {
+            type: String,
+            default: ''
+        },
+        title: {
+            type: String,
+            default: ''
+        },
+        bottomcontext: {
+            type: Boolean,
+            default: true
+        },
+        bottomtext: {
+            type: String,
+            default: ''
+        },
+       
+        headerImg: {
+            type: String,
+            default: ''
+        },
+        nickname: {
+            type: String,
+            default: ''
+        }
+      
+    }
+    
+}
+</script>
+

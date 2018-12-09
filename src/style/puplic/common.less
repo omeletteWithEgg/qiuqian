@@ -1,0 +1,56 @@
+@btn-primary-color:rgb(247, 3, 125);
+
+@btn-sub-color:rgb(247, 3, 125);
+
+@btn-radius:15px;
+
+@white:#fff;
+
+@mini-btn-padding: 2px 7px;
+
+@medi-btn-padding: 3px 10px;
+
+@text-grey: #999;
+
+@sub-font-size:12px;
+
+@primary-font-size:14px;
+
+.border(@border-color;@width;@position;@top;){
+    display: inline-block;
+    context:"";
+    @width: 1px;
+    background: @border-color;
+    position: absolute;
+    @position:@top;
+}
+.padding(@right;@left;@bottom;@top) {
+    padding-top:@top;
+    padding-bottom:@bottom;
+    padding-right:@right;
+    padding-left:@left;
+  }
+
+
+.btn-mini{
+    border-radius:@btn-radius;
+    background:linear-gradient(to right,
+    @btn-primary-color,@btn-sub-color);
+    padding:@mini-btn-padding;
+    color:@white
+}
+.btn-medium{
+    border-radius:@btn-radius;
+    background:linear-gradient(to right,
+    @btn-primary-color,@btn-sub-color);
+    padding:@medi-btn-padding;
+    color:@white
+}
+.btn-large{
+    border-radius:@btn-radius;
+    background:linear-gradient(to right,
+    @btn-primary-color,@btn-sub-color);
+    width:100%;
+    text-align: center;
+    color:@white
+}
