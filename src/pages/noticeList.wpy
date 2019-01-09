@@ -1,7 +1,21 @@
 <style lang="less">
-@import "../style/app.less";
-  page>view{
+// @import "../style/app.less";
+page>view{
     height: 100%
+}
+  .container{
+    height: 100%;
+    padding:30rpx 40rpx 120rpx 40rpx;
+    background:#f5f5f5
+  }
+  .btn-large-wrap{
+      position: fixed;
+      bottom:0px;
+      left:0px;
+      right:0px;
+      background:#fff;
+      padding:20rpx 0;
+
   }
  .blank-center{
    height: 100%;
@@ -13,29 +27,10 @@
    }
   
  }
-  .userinfo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .userinfo-avatar {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 50%;
-  }
-
-  .userinfo-nickname {
-    color: #aaa;
-  }
-  .container{
-    padding:30rpx 40rpx;
-    background:#f5f5f5
-  }
   .content-list text{
     display: block;
     padding:10px 0px;
-    font-size:@primary-font-size;
+    font-size:14px;
     border-top:1px solid #999;
     &:first-child{
       border-top:0px
@@ -70,21 +65,16 @@
 </style>
 <template>
 <view>
-  <view class="container" wx:if="{{list.length>0}}">
+  <scroll-view scroll-y class="container" wx:if="{{list.length>0}}">
        <repeat for="{{list}}" key="index" index="index" item="item">
           <indexList
           :bgImg="item.img"
           :title="item.title"
           :id="item.id"
-          :nickname="item.nickName"
-          bottomcontext="true"
-          :status="item.status"
-          :headerImg="item.headerImg"
+          :bottomcontext="item.bottomContext"
           :righttext="item.righttext"
-          :bottomtext="item.bottomText"
           :startdate="item.startDate"
           :enddate="item.endDate"
-          :iconstatus="item.iconstatus"
           @seeDetail.user="goDetail"
           @deleteItem.user="deleteItem"
           ></indexList>
@@ -111,12 +101,15 @@
 
   <Comments :content.sync="item" theme="orange" />
   </repeat> -->
+  <view class="btn-large-wrap">
+      <button class="btn-large" @tap="createNew">我要发布通知</button>
+</view>
    
-  </view>
+  </scroll-view>
   <view wx:else class="blank-center">
     <view>
-     <view class="sub-title">还没有创建或是参与过任何签到</view>
-      <button class="btn-large" @tap="createNew">创建一个新的签到</button>
+     <view class="sub-title">还未发布任何通知</view>
+      <button class="btn-large" @tap="createNew">我要发布新的通知</button>
       </view>
   </view>
 </view>
@@ -129,10 +122,10 @@
   import modal from '../components/modal'
   import Auth from '../utils/auth'
 
-  export default class Index extends wepy.page {
+  export default class NoticeList extends wepy.page {
 
     config = {
-      navigationBarTitleText: '秋签'
+      navigationBarTitleText: '所有通知'
     }
     components = {
       indexList: indexList,
@@ -141,55 +134,39 @@
 
 
     data = {
-      valiCode:'',
-      valiBtnText:'35rtr',
       deleteId:'',
       modalshow:false,
-      selectedDates: ['2018-07-30', '2018-08-10', '2018-08-21'],
-      userInfo: {
-        nickName: '加载中...'
-      },
       list: [
         {
           id: 1,
           nickName: '长颈鹿',
           title:"标题三秒后会被修改",
           rightText:"shogh",
-          headerImg:"../images/20160704183817_nQhWe.thumb.700_0.jpeg",
           endDate:'2019-09-09',
-          bottomContext:true,
+          bottomContext:'',
           bottomText:"299人",
           startDate:'2019-09-09',
-          status:"报名中",
-          iconstatus:"in",
           img:"../images/20151023194034_zc2Fv.thumb.700_0.jpeg",
         },
         {
           id: 1,
-          nickName: '长颈鹿',
           title:"标题三秒后会被修改",
           rightText:"shogh",
-          headerImg:"../images/20160704183817_nQhWe.thumb.700_0.jpeg",
           endDate:'2019-09-09',
-          bottomContext:true,
+          bottomContext:'',
           bottomText:"299人",
           startDate:'2019-09-09',
-          status:"报名中",
           iconstatus:"close",
           img:"../images/20151023194034_zc2Fv.thumb.700_0.jpeg",
         },
         {
           id: 1,
-          nickName: '长颈鹿',
           title:"标题三秒后会被修改",
           rightText:"shogh",
-          headerImg:"../images/20160704183817_nQhWe.thumb.700_0.jpeg",
           endDate:'2019-09-09',
-          bottomContext:true,
+          bottomContext:'',
           bottomText:"299人",
           startDate:'2019-09-09',
-          status:"报名中",
-          iconstatus:"close",
           img:"../images/20151023194034_zc2Fv.thumb.700_0.jpeg",
         }
       ]
@@ -197,7 +174,7 @@
 
     methods ={
       goDetail(msg){
-         this.$navigate('./signItemDetail?id='+msg)
+         this.$navigate('./noticeDetail?id='+msg.id)
         //  this.$navigate('')
       },
       deleteItem(id){
@@ -206,7 +183,7 @@
         this.$broadcast('modalChange',this.modalshow)
       },
       createNew(){
-        this.$navigate('./writeSignInfo')
+        this.$navigate('./postNotice')
       },
       confirmFunc(){
         if(this.valiCode==''){
@@ -223,6 +200,11 @@
          });
         }
       }
+    }
+
+
+    onLoad() {
+     
     }
   }
 </script>

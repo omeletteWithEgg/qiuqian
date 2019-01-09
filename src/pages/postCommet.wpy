@@ -1,0 +1,95 @@
+<style lang="less">
+    @import "../style/app.less";
+    .top-view{
+        padding: 20rpx 40rpx;
+    }
+    .content-view{
+       .tip-text{
+           padding:20rpx 40rpx;
+       }
+        .textarea-input{
+            position: relative;
+             padding:20rpx 40rpx;
+            background: #fff;
+          
+            textarea{
+                font-size:24rpx;
+                color:#9F9F9F;
+                width:100%;
+                padding-bottom: 120rpx;
+                box-sizing: border-box;
+            }
+            .media-view{
+                position: absolute;
+                bottom:32rpx;
+
+            }
+            .add{
+                width: 100rpx;
+                height: 100rpx;
+                border-radius:12rpx;
+                border:1rpx solid rgba(217,217,217,1);
+                text-align: center;
+                font-size:20rpx;
+                color:#5f5f5f;
+                margin-right:20rpx;
+                float: left;
+            }
+        }
+    }
+    .contact-btn{
+        position: absolute;
+        bottom:170rpx;
+        left: 30rpx;
+        right:30rpx;
+        text-align: center
+    }
+   
+</style>
+<template>
+    <view>
+        <view class="flex-form top-view">
+            <view class="btn-round disabled" @tap="cancel">取消</view>
+            <view class="btn-round" @tap="savePost">完成</view>
+        </view>
+        <view class="content-view">
+            <view class="textarea-input">
+             <textarea bindblur="bindTextAreaBlur" value="{{content}}" placeholder="请输入留言内容" maxlength='-1'/>
+            </view>
+        </view>
+            
+    </view>
+</template>
+<script>
+ import wepy from 'wepy';
+ import Auth from '../utils/auth.js';
+ import Config from '../utils/config.js';
+
+  export default class postCommet extends wepy.page {
+     config = {
+      navigationBarTitleText: '给发起人留言'
+    }
+
+    data={
+      content:''
+    }
+
+    methods = {
+    
+        async savePost(){
+            const url=Auth.baseUrl+'/qiuqian/user/group/message?OpenID=&GroupID=';
+            const res = await Auth.post(url);
+            this.$navigate('./contactUs')
+        },
+        cancel(){
+             wx.navigateBack({
+                 delta: 1
+             })
+        },
+    }
+
+}
+
+ 
+  
+</script>

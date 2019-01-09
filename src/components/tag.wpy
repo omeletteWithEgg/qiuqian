@@ -1,0 +1,40 @@
+ <style lang="less" scoped>
+ .btn-mini{
+    width:42px;
+    height:18px;
+    padding:0px;
+    line-height: 16px;
+    display: inline-block;
+    border-radius: 12px;
+    margin-left:10px;
+    &.btn-outline{
+      background: #fff;
+      border:1px solid #707070;
+      color:#808080
+    }
+ }
+</style>
+<template>
+        <button wx:for="{{list}}" class="btn-mini {{item.checked?'':'btn-outline'}}" data-text="{{item.text}}"  @tap="chooseItems" data-key="{{index}}" wx:key="index">{{item.text}}</button>
+</template>
+<script>
+import wepy from 'wepy'
+export default class tagBtn extends wepy.component{
+ 
+    props = {
+        list:{}
+    }
+
+    methods  = {
+        chooseItems(e){
+            const index=e.currentTarget.dataset.key;
+            const text=e.currentTarget.dataset.text;
+            this.list[index].checked = !this.list[index].checked;
+            const ifChecked = this.list[index].checked;
+            this.$emit('changeBtnStatus', {'text':text,'ifChecked':ifChecked})
+        }
+    }
+    
+}
+</script>
+

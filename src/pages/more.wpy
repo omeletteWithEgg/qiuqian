@@ -1,0 +1,120 @@
+<template>
+    <view class="container">
+          <repeat for="{{list}}" key="index" index="index" item="item">
+          <indexList
+          :bgImg="item.img"
+          :bottomtitle="item.title"
+          :id="item.id"
+          :bottomsubtitle="item.subtitle"
+          :bottomcontext="item.bottomContext"
+          :imgtext="item.imgText"
+          :righticon="rightIcon"
+          :btntext="btnText"
+          imgheight="226px"
+          @seeDetail.user="goDetail"
+          @deleteItem.user="deleteItem"
+          ></indexList>
+       </repeat>
+    </view>
+</template>
+<script>
+  import wepy from 'wepy'
+
+  import indexList from '../components/indexList'
+
+  export default class More extends wepy.page {
+
+    config = {
+      navigationBarTitleText: '精选推荐'
+    }
+    components = {
+      indexList: indexList
+    }
+
+
+    data = {
+        btnText:'查看签到',
+      selectedDates: ['2018-07-30', '2018-08-10', '2018-08-21'],
+      userInfo: {
+        nickName: '加载中...'
+      },
+      list: [
+        {
+          id: 1,
+          subtitle: '长颈鹿',
+          title:"标题三秒后会被修改",
+          endDate:'2019-09-09',
+          bottomContext:"false",
+          imgText:false,
+          rightIcon:false,
+          img:"../images/20151023194034_zc2Fv.thumb.700_0.jpeg",
+        },
+        {
+          id: 1,
+          subtitle: '长颈标题三秒后会被修改标题三秒后会被修改标题三秒后会被修改鹿',
+          title:"标题三秒后会被修标题三秒后会被修改改",
+          bottomContext:"false",
+          imgText:false,
+          rightIcon:false,
+          img:"../images/20151023194034_zc2Fv.thumb.700_0.jpeg",
+        },
+        {
+          id: 1,
+          subtitle: '长颈鹿',
+          title:"标题三秒后会被修改",
+          bottomContext:"false",
+          imgText:false,
+          rightIcon:false,
+          img:"../images/20151023194034_zc2Fv.thumb.700_0.jpeg",
+        }
+      ]
+    }
+
+    methods ={
+      goDetail(msg){
+         this.$navigate('./signItemDetail?id='+msg.id)
+        //  this.$navigate('')
+      },
+    
+
+    }
+
+
+
+
+    onLoad() {
+
+    }
+  }
+</script>
+<style lang="less">
+  .container{
+    padding:30rpx 40rpx;
+    background:#f5f5f5
+  }
+  .bottom-content {
+      .bottom-left{
+          width:70%;
+      }
+      .title{
+          font-size: 28rpx;
+      }
+      .sub-text,.title{
+          text-align: left;
+          line-height: 48rpx;
+          width:100%;
+          display: inline-block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis
+      }
+      .btn-round{
+          line-height:52rpx;
+            height:52rpx;
+            width:70px;
+            font-size:20rpx;
+
+      }
+  }
+
+</style>

@@ -1,0 +1,243 @@
+<style lang="less">
+@import "../style/app.less";
+.form-section{
+  margin-bottom:20rpx;
+  position: relative;
+  picker{
+  position: relative;
+  }
+    .textarea{
+    height: 140rpx;
+    width:100%;
+    background: #fff;
+    text-indent: 40rpx;
+    padding:20rpx 0;
+    font-size:28rpx;
+    border-top:1rpx solid #f1f1f1;
+
+  }
+
+  .input-row-right{
+    .input-row{
+      border-top:0
+    }
+  }
+  .input-img.input-row{
+      height:100rpx;
+      padding:20rpx 40rpx;
+    text-align: left;
+    .section-title{
+      float:left;
+      color:#808080;
+    }
+    .qrcode-img{
+      margin-left: 40rpx;
+      height: 100%;
+    }
+    .iconfont{
+      font-size:60px;
+      line-height: 140rpx;
+      padding-left:20rpx;
+      float:left
+    }
+  }
+
+  .icon-check{
+    height: 40rpx;
+  }
+
+  .label-right-text{
+    padding-right:40rpx;
+  }
+
+}
+  .section{
+    position: relative;
+    background: #fff;
+    .sub-title{
+        text-align: left;
+        .icon-jiantou{
+            right:40rpx;
+        }
+    }
+
+  }
+  .input-row{
+      position: relative;
+  }
+   .icon-jiantou{
+    position: absolute;
+    right:0px;
+    top:1px;
+    font-size:20px;
+  }
+.iconfont.icon-xuanzhong{
+    font-size:24px;
+    color:@btn-primary-color;
+    &.unchecked{
+      color:@text-grey
+    }
+  }
+  .section-title{
+    font-size:14px;
+    color:#000
+  }
+.rules{
+    margin:50rpx 0px 0px 0px;
+}
+.btn-large{
+  margin:-10rx auto 0rpx auto;
+}
+</style>
+<template>
+<view style="padding-bottom:80rpx;">
+    <image style="width:100%;height:350rpx;display:block;" src="../images/notice/top_img@2x.png"></image>
+    <form>
+      <view class="form-section">
+        <view class="section ">
+           <InputClear1 placeholder="输入标题" :value="groupTitle" ></InputClear1>
+        </view>
+        <view class="section ">
+             <textarea class="textarea" bindblur="bindTextAreaBlur" maxlength="-1"  placeholder="输入内容"/>
+             <view class="input-img input-row">
+                <view class="section-title">上传图片</view>
+                <!-- <view class="iconfont icon-tianjiatupian"  wx:if="{{qrCodeImg===''}}"> -->
+                <image class="qrcode-img" @tap="uploadCodeImg" style="width:100rpx; height: 100rpx;" mode="scaleToFill" src="{{qrCodeImg}}"> </image>
+            </view>
+        </view>
+          <view class="section flex-form input-row">
+            <view class="section-title">设置活动/会议提醒时间</view>
+            <view wx:if="{{chooseIcon[0].checked}}">
+                  <view class=" iconfont  {{chooseIcon[0].checked?'icon-xuanzhong':'icon-circle'}}" @tap="checkRadio" data-id="noticeTime" data-checked="{{chooseIcon[0].checked}}"></view>
+
+            </view>
+          </view>
+       <view class="input-row flex-form">
+         <view class="section-title">提醒时间</view>
+         <view >
+              <picker
+              mode="time"
+              value="{{callTime}}"
+              start="09:01"
+              end="21:01"
+              bindchange="bindTimeChange3">
+                  <view class="label-right-text">{{callTime}}</view>
+                  <view class=" iconfont icon-jiantou"></view>
+              </picker>
+          </view>
+      </view>
+        <view class="form-section  ">
+          <view class="section flex-form input-row" >
+            <view class="section-title">更改署名</view>
+             <view class="input-row-right">
+               <InputClear3 placeholder="输入署名" :value="name" ></InputClear3>
+            </view>
+          </view>
+        </view>
+       
+        </view>
+          <view class="section  ">
+              <view>
+                <view class="input-row  flex-form" >
+                <view class="section-title">是否关联群通讯录</view>
+                <view  >
+                    <view class=" iconfont  {{chooseIcon[1].checked?'icon-xuanzhong':'icon-circle'}}" @tap="checkRadio" data-id="ifTransmit" data-checked="{{chooseIcon[1].checked}}"></view>
+                </view>
+              </view>
+                 <view class="input-row  sub-title" @tap="createCommunite">您还没有创建或加入任何通讯录，点击开始<text class="iconfont icon-jiantou"></text></view>
+          </view>
+       </view>
+        <!-- </view> -->
+      <text class="sub-text rules">确认即表示已同意《微信公众平台服务协议》</text>
+       <button class="btn-large" @tap="createNew">保存</button>
+    </form>
+</view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import InputClear from '../components/clearInput';
+  
+
+  export default class postNotice extends wepy.page {
+     config = {
+      navigationBarTitleText: '发布重要通知'
+    }
+
+    components = {
+      InputClear1:InputClear,
+      InputClear3:InputClear
+    }
+
+   data = {
+     collapse:false,
+     checked:true,
+     content:'',
+     groupTitle:'',
+     name:'',
+     chooseIcon:[{
+      'checked':true,
+      'name':'unfree'
+     },{
+      'checked':true,
+      'name':'makeUp'
+     }],
+     qrCodeImg:"../images/imgPlace.png",
+     callTime:'09:09',
+     endDate:'09:09',
+     startTime:'09:09',
+     endTime:'09:09',
+     startDate:'09:09',
+     endDate:'09:09'
+   }
+   methods = {
+     checkRadio(e){
+        const dataId = e.currentTarget.dataset.id;
+        this.chooseIcon.forEach((i)=>{
+          if(i.name==dataId){
+            i.checked = !i.checked;
+          }
+        })
+     },
+     setDate(event){
+       this.radioBtn.forEach(item => {
+         console.log(item)
+         item.btnStatus='btn-outline';
+
+         if(item.id==event.currentTarget.dataset.id){
+           item.btnStatus=''
+         }
+         
+       });
+     },
+      createCommunite(e) {
+            this.$navigate('./chooseSignInfo');
+      },
+      bindTimeChange1(e){
+        this.startTime=e.detail.value
+      },
+
+      uploadCodeImg(){
+        const that = this;
+        wx.chooseImage({
+          count: 1,
+          sizeType: ['original', 'compressed'],
+          sourceType: ['album', 'camera'],
+          success(res) {
+            // tempFilePath可以作为img标签的src属性显示图片
+            const tempFilePaths = res.tempFilePaths;
+            that.qrCodeImg = tempFilePaths;
+            console.log(that.qrCodeImg)
+          }
+        })
+      },
+      chooseInfo(e){
+          this.$navigate('./chooseSignInfo');
+      },
+     collapseToggle(){
+       this.collapse = !this.collapse
+     }
+   }
+
+}
+</script>

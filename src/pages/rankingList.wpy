@@ -1,0 +1,181 @@
+<style lang="less">
+    @import "../style/app.less";
+    .top-view{
+        background: #fff;
+        border-bottom:20rpx solid rgb(233, 233, 233);
+        .flex-form{
+            padding:20rpx 40rpx;
+            &.tab{
+                 border-top:1rpx solid rgb(233, 233, 233);
+                  font-size:24rpx;
+                  padding:20rpx 70rpx;
+                  line-height:50rpx;
+
+                  >view:first-child{
+                      border-right:1rpx solid rgb(233, 233, 233);
+                      width:50%;
+
+                  }
+            }
+            .btn-outline-mini,.btn-mini{
+                margin-right: 20rpx;
+                display: inline-block;
+               
+            }
+            .icon-tishi{
+                color:#808080;
+                vertical-align: middle;
+            }
+            .btn-mini{
+                border-radius: 24rpx;
+            }
+           
+        }
+    }
+    .list-view{
+        background: #fff;
+        color:#505050;
+        font-size:24rpx;
+       
+        >view{
+             padding: 20rpx 40rpx;
+            border-bottom: 1rpx solid rgb(233, 233, 233);
+        }
+         .flex-form{
+              .icon-xingxing{
+                vertical-align: middle;
+                color:#505050;
+            }
+             &:first-child .icon-xingxing{
+                color:#FF6F61
+            }
+            &:nth-child(2) .icon-xingxing{
+                color:rgba(255,111,97,0.8)
+            }
+            &:nth-child(3) .icon-xingxing{
+                color:rgba(255,111,97,0.6)
+            }
+
+         }
+    }
+</style>
+<template>
+<view>
+    <scroll-view>
+        <view class="top-view">
+            <view class="flex-form">
+                
+                <view>
+                     <text  wx:for="{{radioBtn}}" class="{{item.btnStatus}}" data-id="{{item.id}}" @tap="changeRankType">{{item.text}}</text>
+                </view>
+                <view><view class="{{ifChoosed}}" @tap="changeRankList">按排名排序</view><text class="iconfont icon-tishi" @tap="showModel"></text></view>
+            </view>
+            <view class="flex-form tab">
+                <view class="{{tabCls0}}" data-id="0" @tap="changeTab"> 累计排行榜（{{totalNum}}人）</view>
+                <view  class="{{tabCls1}}"  data-id="1" @tap="changeTab"> 连续排行榜（{{lastNum}}人）</view>
+            </view>
+        </view>
+        <view class="list-view">
+            <view wx:for="{{rankingList}}" class="flex-form">
+                <view class="">
+                    <text class="iconfont icon-xingxing" wx:if="{{index<3}}"></text>
+                    <text class="tip-text" wx:if="{{index>2}}">{{index+1}}</text>
+                    <image type="scaleToFill" style="width:44rpx;height:44rpx;border-radius:100%;margin:0 20rpx;vertical-align:middle;" src="{{item.img}}"></image> 
+                    <text class="user">{{item.name}}</text> 
+                </view>
+                <view class="tip-text">累计{{item.num}}次</view>
+            </view>
+        </view>
+        <modal :modaltitle="modalTitle"
+        :lefttext="lefttext"
+        :modalshow.sync="modalShow"
+        :rightbtnshow="rightbtnshow"
+        @confirmFunc.user="modalClick" >
+        <view slot="content" class="content">
+           <text class="tip-text">暂时没有数据哦</text>
+         </view>
+        </modal>
+    </scroll-view>
+</view>
+</template>
+<script>
+ import wepy from 'wepy';
+ import modal from '../components/modal';
+
+  export default class rankingList extends wepy.page {
+     config = {
+      navigationBarTitleText: '排行榜'
+    }
+    components = {
+      modal:modal
+    }
+    data={
+        modalTitle:'排行榜规则说明',
+        lefttext:'我知道了',
+        rightbtnshow:false,
+        modalShow:false,
+        tabCls0:'tip-text',
+        tabCls1:'',
+        lastNum:'23',
+        totalNum:'102',
+        ifChoosed:'btn-outline-mini ',
+        shareTitle:'shophgsg',
+        radioBtn:[
+         {'text':"今日",'id':'0','btnStatus':'btn-outline-mini '},
+         {'text':"昨日",'id':"1",'btnStatus':'btn-outline-mini '},
+         {'text':"总榜",'id':"2",'btnStatus':'btn-mini '}
+        ],
+        rankingList:[
+            {'name':'sgsg0','img':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','num':'3444','ranking':'2'},
+            {'name':'sgsg0','img':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','num':'3444','ranking':'1'},
+            {'name':'sgsg0','img':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','num':'3444','ranking':'3'},
+            {'name':'sgsg0','img':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','num':'3444','ranking':'4'},
+        ]
+    }
+
+    methods = {
+        changeRankList(){
+            if(this.ifChoosed=='btn-outline-mini'){
+                this.ifChoosed='btn-mini'
+            }else{
+                this.ifChoosed='btn-outline-mini'
+            }
+            //  this.$navigate('./contactUs')
+        },
+        changeTab(event){
+           
+            if(event.currentTarget.dataset.id=='0'){
+                this.tabCls0='';
+                this.tabCls1='tip-text';
+            }
+            if(event.currentTarget.dataset.id=='1'){
+                this.tabCls1='';
+                this.tabCls0='tip-text';
+            }
+        },
+        changeRankType(event){
+            this.radioBtn.forEach(item => {
+                console.log(item)
+                item.btnStatus='btn-outline-mini';
+                if(item.id==event.currentTarget.dataset.id){
+                item.btnStatus='btn-mini'
+                }
+                
+            });
+     
+        },
+        showModel(){
+            this.data.modalShow=true;
+            this.$broadcast('modalChange',this.data.modalShow)
+        },
+         modalClick(ifShow){
+             this.data.modalShow=ifShow
+        }
+       
+    }
+
+}
+
+ 
+  
+</script>

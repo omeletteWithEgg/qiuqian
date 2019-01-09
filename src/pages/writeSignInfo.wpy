@@ -1,0 +1,191 @@
+<style lang="less">
+@import "../style/app.less";
+.form-section{
+  position: relative;
+  .picker{
+   position: relative
+  }
+  .section{
+    position: relative;
+  }
+  .sub-title{
+    padding:25rpx 0 25rpx 40rpx;
+    text-align: left;
+  }
+ 
+
+  .icon-jiantou{
+    position: absolute;
+    right:20px;
+    top:9px;
+    font-size:20px;
+    color:#4E4E4E
+  }
+  .icon-jiantou3{
+    font-size: 22px
+  }
+}
+.radio-group{
+  padding:0 40rpx;
+  background: #fff;
+  .radio{
+    display: block;
+    height: 80rpx;
+    line-height: 80rpx;
+    font-size: 14px;
+    color:#808080
+  }
+}
+.icon-round{
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 100%;
+  background: #808080;
+  margin-right:19rpx;
+  &.checked{
+    background:@btn-primary-color
+  }
+}
+ .sub-title.rules{
+    margin-top:40rpx;
+    font-size: 11px;
+  }
+.btn-large{
+  margin:-5px auto 30px auto
+}
+</style>
+<template>
+<view style="height:100%">
+<scroll-view scroll-y="true" style="height:100%">
+    <form>
+      <view class="form-section">
+        <view class="section ">
+          <view class="sub-title">姓名*</view>
+           <InputClear1 placeholder="请输入姓名" :value="groupTitle"></InputClear1>
+        </view>
+      </view>
+      <view class="form-section">
+        <view class="section ">
+          <view class="sub-title">性别*</view>
+          <radio-group class="radio-group" bindchange="radioChange">
+            <view class="radio " wx:for="{{radioItems}}">
+              <view class="radio-label" ><view @tap="chooseSex" class="icon-round {{item.checked?'checked':''}}"></view>{{item.name}}</view>
+            </view>
+          </radio-group>
+        </view>
+      </view>
+      <view class="form-section">
+        <view class="section" >
+
+          <repeat wx:for="{{list}}">
+           <view class="sub-title">{{item.label}}</view>
+          <InputClear2 type='digit' :placeholder="item.text" ></InputClear2>
+          </repeat>
+        </view>
+      </view>
+       <view class="form-section ">
+          <view class="section">
+            <view class="sub-title">婚姻状况*</view>
+              <picker class="picker" bindchange="bindPickerChange" value="{{viewItem}}" range="{{viewArray}}">
+                <input disabled class="input-row" placeholder="请选择婚姻状况" value="{{viewItem}}" />
+                <view class=" iconfont icon-jiantou"></view>
+              </picker>
+          </view>
+        </view>
+      <text class="sub-title rules">确认即表示已同意《微信公众平台服务协议》</text>
+       <button class="btn-large" @tap="ensure">确认</button>
+    </form>
+</scroll-view>
+</view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import InputClear from '../components/clearInput'
+  
+
+  export default class addNewSign extends wepy.page {
+     config = {
+      navigationBarTitleText: '报名信息'
+    }
+
+    components = {
+      InputClear1:InputClear,
+      InputClear2:InputClear
+    }
+
+   data = {
+     viewItem:'',
+     viewArray:['已婚','未婚'],
+     radioItems:[{'name':'男','value':'男','checked':true},{'name':'女','value':'女','checked':false},{'name':'保密','value':'保密','checked':false}],
+     list:[{
+      'label':'年龄*',
+      'text':'请输入年龄'
+     },
+     {
+      'label':'体重*',
+      'text':'请输入体重'
+     },
+     {
+      'label':'身高*',
+      'text':'请输入身高'
+     }]
+
+   }
+   methods = {
+     chooseSex(){
+
+     },
+     checkRadio(e){
+        const dataId = e.currentTarget.dataset.id;
+        this.chooseIcon.forEach((i)=>{
+          if(i.name==dataId){
+            i.checked = !i.checked;
+          }
+        })
+      
+      //  const flag = '1';
+      //  if(flag=='1'){
+      //    flag='0';
+      //    e.currentTarget.dataset.checked='false';
+      //  }else{
+      //     flag='1';
+      //    e.currentTarget.dataset.checked='true'
+      //  }
+     },
+     ensure(event){
+       this.radioBtn.forEach(item => {
+         console.log(item)
+         item.btnStatus='btn-outline';
+
+         if(item.id==event.currentTarget.dataset.id){
+           item.btnStatus=''
+         }
+         
+       });
+     },
+      bindPickerChange(e) {
+        console.log('picker发送选择改变，携带值为', e.detail.value)
+        this.viewItem=e.detail.value
+        
+      },
+     
+   }
+
+  onLoad(option){
+    //  var arr = []
+    // for (let i in option) {
+    //     arr.push(option[i])
+    // }
+    // this.radioBtn.push(...arr);
+    // console.log(this.getCurrentPages())
+    // const length = this.getCurrentPages().length;
+    // if(this.getCurrentPages()[length-2].route=="pages/chooseSignInfo"){
+    //   this.collapse=true;
+    // }
+  }
+
+  //.2',
+  }
+</script>

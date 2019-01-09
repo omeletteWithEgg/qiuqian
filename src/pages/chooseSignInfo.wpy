@@ -1,0 +1,135 @@
+<style lang="less">
+@import "../style/app.less";
+.form-section{
+  .section{
+    position: relative;
+    &.input-row{
+        padding:0 20px 0 10px;
+        line-height: 37px
+    }
+    .btn-mini{
+    width:42px;
+    height:18px;
+    padding:0px;
+    line-height: 16px;
+    display: inline-block;
+    border-radius: 12px;
+    margin-left:10px;
+    &.btn-outline{
+      background: #fff;
+      border:1px solid #707070;
+      color:#808080
+    }
+ }
+  }
+  .icon-check{
+    height: 20px;
+  }
+  .iconfont.icon-xuanzhong{
+    font-size:24px;
+    color:@btn-primary-color
+  }
+  .label-right-text{
+    padding-right:20px;
+    font-size:12px;
+
+  }
+
+  .icon-arrow{
+    position: absolute;
+    right:10px;
+    top:10px;
+  }
+}
+  .sub-title{
+      padding: 15px 20px 10px 20px;
+      text-align: left;
+      font-size:14px;
+      &.rules{
+          text-align: center;
+          padding: 24px 0 18px 0;
+          font-size: 12px;
+      }
+  }
+.btn-large{
+  margin:-5px auto 30px auto
+}
+</style>
+<template>
+    <form>
+      <text class="sub-title">已选项目</text>
+      <view class="form-section  ">
+          <view class="section input-row">
+            <view>
+              <button  wx:for="{{choosedItems}}" class="btn-mini " wx:key="{{index}}" >{{item.text}}</button>
+            </view>
+          </view>
+         
+        </view>
+        <text class="sub-title"> 点击选择需要填写的信息</text>
+         <view class="form-section  ">
+          <view class="section input-row">
+            <view >
+                <tagBtn :list="tagList"  @changeBtnStatus.user="changeBtnStatus"></tagBtn>
+            </view>
+          </view>
+         
+        </view>
+      <text class="sub-title rules">确认即表示已同意《微信公众平台服务协议》</text>
+       <button class="btn-large" @tap="ensureFunc">确认</button>
+    </form>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import tagBtn from '../components/tag'
+  
+
+  export default class addNewSign extends wepy.page {
+     config = {
+      navigationBarTitleText: '设置报名信息'
+    }
+
+    components = {
+      tagBtn:tagBtn
+    }
+
+   data = {
+    choosedItems:[
+         {'text':'姓名'},
+         {'text':'性别'}
+    ],
+    tagList:[
+          {'text':'姓名'},
+          {'text':'公司'},
+         {'text':'性别'}
+    ]
+   }
+
+   events = {
+     
+   }
+   methods = {
+       changeBtnStatus(msg){
+           if(msg.ifChecked===true){
+             this.choosedItems.push(msg)
+           }else{
+             this.choosedItems.forEach((item,index)=>{
+               if(item.text==msg.text){
+                 this.choosedItems.splice(index,1)
+               }
+             })
+           }
+       },
+       ensureFunc(){
+         console.log(this.choosedItems)
+         const pageData = [];
+         this.choosedItems.forEach((item)=>{
+           pageData.push(item.text)
+         });
+          this.$navigate('./addNewSign',pageData)
+       }
+   }
+  //.2',
+  }
+</script>

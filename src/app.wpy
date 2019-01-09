@@ -12,25 +12,51 @@
 
 <script>
 import wepy from 'wepy'
+
+
 import 'wepy-async-function'
 
 import { setStore } from 'wepy-redux'
-import configStore from './store'
+  import Auth from './utils/auth'
+// import configStore from './store'
+// const regeneratorRuntime = global.regeneratorRuntime = require('./utils/runtime.js')
+// const co = require('./utils/index.js')
+const http = require('./utils/utils')
+const Config= require('../utils/config') 
 
-const store = configStore()
-setStore(store)
+// const store = configStore()
+// setStore(store)
 
 export default class extends wepy.app {
+ 
   config = {
     pages: [
       'pages/index',
+      'pages/createNewSign',
+      'pages/login',
       'pages/addNewSign',
-       'pages/useCenter'
+       'pages/useCenter',
+       'pages/noticeList',
+       'pages/chooseSignInfo',
+       'pages/writeSignInfo',
+       'pages/signItemDetail',
+       'pages/myRecords',
+       'pages/shareImage',
+       'pages/postMoment',
+       'pages/rankingList',
+       'pages/helpCenter',
+       'pages/postNotice',
+       'pages/noticeDetail',
+       'pages/contactUs',
+       'pages/openNotice',
+       'pages/postCommet',
+       'pages/settings',
+       'pages/more'
     ],
     window: {
       backgroundTextStyle: 'light',
-      navigationBarBackgroundColor: '#ffffff',
-       backgroundColor: '#f5f5f5',
+      navigationBarBackgroundColor: '#fff',
+       backgroundColor: '#f7f7f7',
       navigationBarTitleText: 'WeChat',
       navigationBarTextStyle: 'black'
     },
@@ -43,17 +69,20 @@ export default class extends wepy.app {
         {
           pagePath: 'pages/index',
           text: '我的签到',
-           icon:'icon-fork',
+           iconPath:'./images/tab/tab1-2.png',
+           selectedIconPath:'./images/tab/tab1.png'
         },
         {
-          pagePath: 'pages/addNewSign',
+          pagePath: 'pages/createNewSign',
           text: '新建签到',
-           icon:'icon-fork',
+           iconPath:'./images/tab/tab2.png',
+           selectedIconPath:'./images/tab/tab2-2.png'
         },
         {
             pagePath: 'pages/useCenter',
             text:"个人中心",
-            icon:'icon-xingqiu',
+            iconPath:'./images/tab/tab3-2.png',
+            selectedIconPath:'./images/tab/tab3.png'
         }
       ]
     }
@@ -61,42 +90,76 @@ export default class extends wepy.app {
   }
 
   globalData = {
-    userInfo: null
+    auth:{},
+    appid: '',
+    appsecret:'',
+    baseUrl:"http://qct-qiuqian.com:9999",
+    // co: co,
+    // regeneratorRuntime: regeneratorRuntime,
+    http: http,
+    config:Config
   }
 
   constructor () {
     super()
     this.use('requestfix')
-  }
-
-  onLaunch() {
-    this.testAsync()
-  }
-
-  sleep (s) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve('promise resolved')
-      }, s * 1000)
-    })
-  }
-
-  async testAsync () {
-    const data = await this.sleep(3)
-    console.log(data)
-  }
-
-  getUserInfo(cb) {
-    const that = this
-    if (this.globalData.userInfo) {
-      return this.globalData.userInfo
-    }
-    wepy.getUserInfo({
-      success (res) {
-        that.globalData.userInfo = res.userInfo
-        cb && cb(res.userInfo)
+    this.use('promisify')
+    this.intercept('request',{
+      config(p){
+        return p
+      },
+      success(p){
+         console.log('success:'+JSON.stringify(p))
+        return p
+      },
+      fail(p){
+        console.log('fail:'+JSON.stringify(p))
+        return p
+      },
+      complete(p){
+        //
+        console.log('complete:'+JSON.stringify(p))
+        return p
       }
     })
+  }
+
+
+  
+
+  onLaunch() {
+      this.getUserInfo()
+  }
+
+ getUserInfo () {
+    
+      return new Promise((resolve, reject) => {
+          // let cache = Auth.getConfig('auth');
+            const isLogin = Auth.isLogin();
+          if (isLogin) {
+              resolve(isLogin);
+          } else {
+             wepy.navigateTo ({
+                  url: '../pages/login'
+              })
+          }
+      });
+  }
+  setUserInfo(obj,key) {
+    const value=wepy.getStorageSync(obj[key]);
+	   if(value!==''){
+		    wepy.$instance.globalData.auth[key]=value;
+	   }
+  //   const that = this
+  //   if (this.globalData.userInfo) {
+  //     return this.globalData.userInfo
+  //   }
+  //   wepy.getUserInfo({
+  //     success (res) {
+  //       that.globalData.userInfo = res.userInfo
+  //       cb && cb(res.userInfo)
+  //     }
+  //   })
   }
 }
 </script>

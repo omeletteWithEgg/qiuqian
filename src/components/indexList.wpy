@@ -1,19 +1,20 @@
  <style lang="less" scoped>
+@import "../style/app.less";
     .items{
         width:100%;
+        // height: 368rpx;
         box-sizing: border-box;
-        margin-bottom: 10px;
+        margin-bottom: 20rpx;
         position: relative;
         .main-content{
-            height:180px;
             position: relative;
             .list-info{
                 position: absolute;
-                bottom:10px;
-                left:10px;
-                right:10px;
+                bottom:30rpx;
+                left:20rpx;
+                right:20rpx;
                 font-size: 10px;
-                line-height: 20px;
+                line-height: 40rpx;
                 color:rgb(224, 224, 224);
                 .list-title{
                     display: block;
@@ -27,41 +28,54 @@
             .status{
                 position:absolute;
                 left:0px;
-                top:10px;
-                border-radius:0 15px 15px 0;
+                top:20rpx;
+                border-radius:0px 30rpx 30rpx 0px;
                 color:#fff;
-                padding:1px 10px;
+                padding:2rpx 20rpx;
                 font-size:10px
             }
             .status.in{
-               background: rgb(247, 3, 125)
+               background: @btn-primary-color;
             }
             .status.close{
                 background:#666
             }
-            .close-icon{
+            .icon-cha{
                 position:absolute;
-                right:10px;
-                top:10px;
-                
+                right:20rpx;
+                top:20rpx;
+                color:#fff;
 
             }
         }
         .bottom-content{
             background: #fff;
-            border-radius:0 0 10px 10px;
+            border-radius:0px 0px 12rpx 12rpx;
             color:#000;
             font-size:12px;
-            padding:7px;
+            padding:14rpx;
             display: -webkit-flex;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position:absolute;
+            bottom:-65rpx;
+            width:100%;
+            box-sizing:border-box;
+            &.opacity{
+                background: rgba(255,255,255,.9);
+                height: 134rpx;
+                bottom:9rpx;
+                border-radius: 0 0 12rpx 12rpx;
+            }
+            .bottom-right.close{
+                color:#808080;
+            }
             .bottom-left{
                 image{
                     display:inline-block;
                     vertical-align:middle;
-                    margin-right: 10px;
+                    margin-right: 20rpx;
                 }
             }
             
@@ -70,37 +84,67 @@
 </style>
 <template>
         <block>
-            <view class="items">
+            <view class="items" @tap="seeDetail" data-id="{{id}}">
                 <view class="main-content">
-                    <image class="bg-img" style="width: 100%; height: 100%; border-radius:10px 10px 0 0;" mode="scaleToFill" src="{{bgImg}}"> </image>
+                    <image class="bg-img" style="width: 100%; height:{{imgheight}};border-radius:12rpx;" mode="scaleToFill" src="{{bgImg}}"> </image>
                     <text class="status {{iconstatus}}"  wx:if="{{status}}">{{status}}</text>
-                    <icon class="close-icon" size="18" type="clear"></icon>
-                    <view class="list-info">
+                    <text class="iconfont icon-cha" wx:if="{{righticon}}" @tap.stop="deleteItem" data-id="{{id}}"></text>
+                    <view class="list-info" wx:if="{{imgtext}}">
                         <text class="list-title">{{title}}</text>
                         <text class="date">{{startdate}}</text> 至 <text class="comment">{{enddate}}</text>
                         <text class="right-text">{{righttext}}</text>
                     </view>
                 </view>
-                <view class="bottom-content"  wx:if="{{bottomcontext}}">
+                <view class="bottom-content"  wx:if="{{bottomcontext=='true'}}">
                     <view class="bottom-left">
                         <image class="head-img" style="width:30px; height: 30px;border-radius:100% " mode="scaleToFill" src="{{headerImg}}"> </image>
                         <text class="nick-name">{{nickname}}</text>
                     </view>
-                    <view class="bottom-right"><text class="iconfont icon"></text><text>{{bottomtext}}</text></view>
+                    <view class="bottom-right {{iconstatus}}"  wx:if="{{status}}"><text class="iconfont icon-wode"></text><text >{{bottomtext}}</text></view>
+                </view>
+                <view class="bottom-content opacity"  wx:if="{{bottomcontext=='false'}}">
+                    <view class="bottom-left">
+                        <text class="title">{{bottomtitle}}</text>
+                        <text class="sub-text">{{bottomsubtitle}}</text>
+                    </view>
+                    <view><button class="btn-round" >{{btntext}}</button></view>
                 </view>
             </view>
+           
         </block>
 </template>
 <script>
-import wepy from 'wepy'
+import wepy from 'wepy';
+
 export default class indexList extends wepy.component{
 
     props = {
+
         bgImg: {
             type: String,
             default: ''
         },
         status: {
+            type: String,
+            default: ''
+        },
+        id: {
+            type: String,
+            default: ''
+        },
+        imgheight: {
+            type: String,
+            default: '140px'
+        },
+        bottomtitle: {
+            type: String,
+            default: ''
+        },
+        bottomsubtitle: {
+            type: String,
+            default: ''
+        },
+        btntext: {
             type: String,
             default: ''
         },
@@ -125,6 +169,13 @@ export default class indexList extends wepy.component{
             default: ''
         },
         bottomcontext: {
+            default: true
+        },
+        righticon: {
+            type: Boolean,
+            default: true
+        },
+        imgtext: {
             type: Boolean,
             default: true
         },
@@ -142,6 +193,23 @@ export default class indexList extends wepy.component{
             default: ''
         }
       
+    }
+
+    methods = {
+        seeDetail(e){
+            const id = e.currentTarget.dataset.id;
+            this.$emit('seeDetail', id)
+        },
+        deleteItem(e){
+            let deleteId = e.currentTarget.dataset.id;
+            this.$emit('deleteItem', deleteId)
+        }
+     
+    }
+
+     
+    onLoad(){
+       
     }
     
 }

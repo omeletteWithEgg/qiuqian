@@ -1,0 +1,170 @@
+<template>
+	
+	<view>
+	    <!-- <view class='header'>
+	        微信授权
+	    </view> -->
+	 
+	    <!-- <view class='content'>
+	        <view>秋签申请获得一下权限：</view>
+	        <text>获得你的公开信息（昵称、头像、地 区及性别）</text>
+	    </view>
+	    <view class='content'>
+			<button class='bottom' type='text' open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="bindGetUserInfo">
+			拒绝
+			</button>
+			<button class='bottom' type='text' open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="bindGetUserInfo">
+			允许
+			</button>
+	    </view> -->
+		 <modal :modaltitle="modalTitle"
+		 modalStyle="bottom:35%;top:30%;text-align:left"
+        :lefttext="lefttext"
+        :modalshow.sync="modalShow"
+        :righttext="righttext"
+        @confirmFunc.user="bindGetUserInfo" 
+		@cancelFunc.user="rejectInfo">
+        <view class="content" slot="content">
+	        <view class="sub-title">秋签申请获得一下权限：</view>
+	        <text>获得你的公开信息（昵称、头像、地 区及性别）</text>
+	    </view>
+        </modal>
+		 <modalAlert :modaltitle="modalAlertTitle"
+		 modalStyle="bottom:35%;top:30%;text-align:left"
+        :lefttext="alertLeftText"
+        :righttext="alertRightText"
+        :modalshow.sync="modalAlertShow"
+        @confirmFunc.user="alertConfirm" 
+        @cancelFunc.user="alertCancel" >
+        <view class="content" slot="content">
+	        <view class="sub-title">您点击了拒绝授权，将无法进入小程序</view>
+	    </view>
+        </modalAlert>
+	</view>
+</template>
+<script>
+	import wepy from 'wepy';
+	 import modal from '../components/modal';
+	 import Auth from '../utils/auth.js';
+	 import Config from '../utils/config.js';
+	 const app = getApp();
+	// const regeneratorRuntime = app.regeneratorRuntime;
+	// const co = app.co;
+	const http = app.http;
+	export default class Login extends wepy.page {
+		 components = {
+		   modal:modal,
+		   modalAlert:modal
+		}
+
+		data={
+			modalTitle:'微信授权',
+			modalAlertTitle:'提示',
+			lefttext:'拒绝',
+			righttext:'允许',
+			alertLeftText:'确定',
+			alertRightText:'返回授权',
+			modalShow:true,
+			modalAlertShow:false
+		}
+		 onLoad(){
+			const that =this;
+			wepy.getSetting({
+	            success: function(res) {
+	                if (res.authSetting['scope.userInfo']) {
+	                    wepy.getUserInfo({
+	                        success: function (res) {
+	                            //从数据库获取用户信息
+	                            // that.queryUsreInfo();
+	                            //用户已经授权过
+	                            wx.navigateTo ({
+	                                url: './index.html'
+	                            })
+	                        }
+	                    });
+	                }
+	            }
+			})
+		}
+
+		methods = {
+			async bindGetUserInfo() {
+					//用户按了允许授权按钮
+					//插入登录的用户的相关信息到数据库
+					// wx.request({
+					// 	url: '这里换成自己后台的链接',
+					// 	data: {
+					// 		// 根据自己的需求传参数
+					// 		// 例如：openid: getApp().globalData.openid
+					// 	},
+					// 	header: {
+					// 		'content-type': 'application/json'
+					// 	},
+					// 	success: function (res) {
+					// 		//从数据库获取用户信息
+					// 		// that.queryUsreInfo();
+					// 		console.log("插入小程序登录用户信息成功！");
+					// 	}
+					// });
+					const token = await Auth.login();
+					const session = await Config.getToken(token);
+					if(session.secret){
+
+						wepy.$instance.globalData.auth=session;
+						Auth.setConfig('auth',session);
+						//授权成功后，跳转进入小程序首页
+						wx.switchTab({
+							url: './index'  
+						})
+					}
+			},
+			rejectInfo(){
+				//用户按了拒绝按钮
+				this.modalAlertShow=true;
+					
+			},
+			alertCancel(){
+				// this.modalAlertShow=true;
+				console.log("点击确定")	
+			},
+			alertConfirm(){
+				this.modalShow=true;
+					
+			},
+			//获取用户信息接口
+			queryUsreInfo() {
+				wx.request({
+					url: '这里换成自己后台的链接',
+					data: {
+						// 根据自己的需求传参数
+						// 例如：openid: getApp().globalData.openid
+					},
+					header: {
+						'content-type': 'application/json'
+					},
+					success: function (res) {
+						// 拿到自己后台传过来的数据，自己作处理
+						console.log(res.data);
+					}
+				})
+
+			}
+		}
+	}
+</script>
+<style lang="less">
+ 
+.content {
+	padding:0rpx 40rpx
+}
+.sub-title{
+	color:#000;
+}
+ 
+.content text {
+    display: block;
+	color: #808080;
+	font-size:28rpx;
+    margin-top:20rpx;
+}
+</style>

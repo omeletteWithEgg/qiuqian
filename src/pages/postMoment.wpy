@@ -1,0 +1,113 @@
+<style lang="less">
+    @import "../style/app.less";
+    .top-view{
+        padding: 20rpx 40rpx;
+        .btn-round:last-child{
+            width:auto;
+            padding: 0px 14rpx;
+        }
+    }
+    .content-view{
+       .tip-text{
+           padding:20rpx 40rpx;
+       }
+        .textarea-input{
+            position: relative;
+             padding:20rpx 40rpx;
+            background: #fff;
+          
+            textarea{
+                font-size:24rpx;
+                color:#9F9F9F;
+                width:100%;
+                padding-bottom: 120rpx;
+                box-sizing: border-box;
+            }
+            .media-view{
+                position: absolute;
+                bottom:32rpx;
+
+            }
+            .add{
+                width: 100rpx;
+                height: 100rpx;
+                border-radius:12rpx;
+                border:1rpx solid rgba(217,217,217,1);
+                text-align: center;
+                font-size:20rpx;
+                color:#5f5f5f;
+                margin-right:20rpx;
+                float: left;
+            }
+        }
+    }
+    .contact-btn{
+        position: absolute;
+        bottom:170rpx;
+        left: 30rpx;
+        right:30rpx;
+        text-align: center
+    }
+   
+</style>
+<template>
+    <view>
+        <view class="flex-form top-view">
+            <view class="btn-round disabled" @tap="cancel">取消</view>
+            <view class="btn-round" @tap="savePost">保存并发布</view>
+        </view>
+        <view class="content-view">
+            <view class="textarea-input">
+             <textarea bindblur="bindTextAreaBlur"  placeholder="请输入内容，记录点滴生活" maxlength='-1'/>
+             <view class="media-view">
+                 <view class="add">
+                     <view class="iconfont icon-xiangji"></view>
+                     <view>上传照片</view>
+                 </view>
+                 <view class="add">
+                     <view class="iconfont icon-xiangji"></view>
+                     <view>打开录音</view>
+                 </view>
+             </view>
+            </view>
+            <text class="tip-text">提示：发起人设置了签到必须填写文字、上传图片、添加录音</text>
+        </view>
+        <view class="contact-btn tip-text" @tap="contactCs">联系客服</view>
+            
+    </view>
+</template>
+<script>
+ import wepy from 'wepy';
+
+  export default class postMoment extends wepy.page {
+     config = {
+      navigationBarTitleText: '发布签到日记'
+    }
+
+    data={
+        userName:'sgg',
+        date:'10293-093',
+        shareTitle:'shophgsg',
+          userImg:'../images/20151023194034_zc2Fv.thumb.700_0.jpeg',
+          QRcodeImg:'../images/20151023194034_zc2Fv.thumb.700_0.jpeg'
+    }
+
+    methods = {
+        contactCs(){
+             this.$navigate('./contactUs')
+        },
+        savePost(){
+            //  this.$navigate('./contactUs')
+        },
+        cancel(){
+             this.$navigateBack({
+                 delta: 1
+             })
+        },
+    }
+
+}
+
+ 
+  
+</script>

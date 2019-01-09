@@ -1,89 +1,32 @@
-<template>
-    <block hidden="{{isActive}}">
-        <view class="popover">
-            <text class="title" wx:if="{{title}}">{{title}}/text>
-            
-            <text class="content"><slot name="content"></slot></text>
-            <view wx:if="{{button}}" class="button-view">
-                <text wx:if="{{button.leftText}}" @tap="btnTap" id="0">{{button.leftText}}</text>
-                <text wx:if="{{button.rightText}}" @tap="btnTap" id="1">{{button.rightText}}</text>
-            </view>
-        </view>
-        <view class="back-drop"></view>
-    </block>
-</template>
-<script>
-import wepy from 'wepy'
-export default class popover extends wepy.component{
-    props = {
-
-       isActive:{
-           type:Boolean,
-           default:true
-       },
-       button:{
-           type:Object,
-           default:{
-
-           }
-       },
-       title:{
-           type:String,
-           default:'提示'
-       },
-       leftTap:{
-           type:Function,
-           default:function(){
-
-           }
-       },
-       rightTap:{
-           type:Function,
-           default:function(){
-
-           }
-       }
-     
-    }
-    methods={
-       btnTap(event){
-           console.log(event)
-           this.isActive = false;
-           if(this.currentTarget.id=='0'){
-               this.leftTap()
-           }
-           if(this.currentTarget.id=='1'){
-               this.rightTap()
-           }
-       }
-    }
-}
-</script>
-<style lang='less' scoped>
+<style lang="less">
+@import "../style/puplic/common.less";
 .popover{
     position: fixed;
     top:30%;
-    left:20px;
-    // font-size: @primary-font-size;
-    right:20px;
+    left:30px;
+    right:30px;
     text-align: center;
     z-index:2;
+    font-size:@primary-font-size;
+    border-radius: 5px;
+    background:@white;
     .title{
         color:#000;
         position: relative;
-        :after{
-            .border(#333;height;top;0px)
-        }
+        padding: 10px;
+        display:block;
     }
-    .content{
-        color:@grey-color;
-        font-size:@sub-font-size;
-    }
+    
     .button-view{
         display: webkit-flex;
         display: flex;
         align-items: center;
-        justify-content: space-between
+        justify-content:space-around;
+        padding:10px 0;
+        &:after{
+            .border-vertical(#000;top;0px)
+        }
+      
     }
 }
 
@@ -97,5 +40,60 @@ export default class popover extends wepy.component{
     z-index: 1;
 }
 </style>
+<template>
+    <view hidden="{{isactive}}">
+        <view class="popover" >
+            <text class="title" wx:if="{{title!==null}}">{{title}}</text>
+            
+            <slot name="content"></slot>
+            <view  class="button-view" wx:if="{{hasbutton}}">
+                <text @tap="tap" id="0">{{lefttext}}</text>
+                <text   @tap="tap" id="1">{{righttext}}</text>
+            </view>
+        </view>
+        <view class="back-drop"></view>
+     
+    </view>
+ 
+</template>
+<script>
+  import wepy from 'wepy'
+
+  export default class Panel extends wepy.component {
+     props = {
+
+       hasbutton:{
+           type:Boolean,
+           default:true
+       },
+       isactive:{
+           type:Boolean,
+           default:false
+       },
+    
+       title:{
+           type:String,
+           default:''
+       },
+       lefttext:{
+           type:String,
+           default:''
+       },
+       righttext:{
+           type:String,
+           default:''
+       },
+       
+     
+    }
+    methods={
+        tap (event) {
+            this.isactive = true;
+            this.$emit('btnClickFunc', event.currentTarget.id)
+        }
+      
+    }
 
 
+  }
+</script>
