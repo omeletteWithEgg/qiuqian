@@ -1,0 +1,94 @@
+
+<style lang="less">
+@btn-primary-color:#FF6F61;
+.section{
+    font-size:30rpx;
+    color:#000;
+    .num-text{
+        width:35rpx;
+        height:35rpx;
+        border-radius: 100%;
+        color:#fff;
+        background: @btn-primary-color;
+        font-size:24rpx;
+        line-height: 35rpx;
+        text-align: center;
+        margin-left:16rpx;
+       float:left;
+        margin-top:9px;
+
+
+    }
+    &:last-child{
+        margin-top:20rpx;
+    }
+}
+        
+</style>
+<template>
+    <view class="">
+        <view class="section input-row  flex-form" @tap="navigate" data-type="1" >
+          <view class="section-title">每日膳膳签官方</view>
+            <view class=" iconfont icon-jiantou" ><text class="num-text" wx:if="{{count.System!=0&&isPlus==true}}">{{count.System}}</text></view>
+        </view>
+        <view class="section input-row  flex-form" @tap="navigate" data-type="2">
+          <view class="section-title">最新留言</view>
+            <view class=" iconfont icon-jiantou" ><text class="num-text" wx:if="{{count.Message!=0&&isPlus==true}}">{{count.Message}}</text></view>
+        </view>
+        <view class="section input-row  flex-form" @tap="navigate" data-type="3">
+          <view class="section-title">补签申请</view>
+            <view class=" iconfont icon-jiantou" ><text class="num-text" wx:if="{{count.ResignApplication!=0&&isPlus==true}}">{{count.ResignApplication}}</text></view>
+        </view>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    import Auth from '../utils/auth'
+    import Config from '../utils/config'
+
+
+    export default class Messages extends wepy.page {
+        config = {
+            'navigationBarTitleText': '我的消息'
+        };
+
+
+        data = {
+            isPlus:false,
+            count:{},
+            type:''
+        };
+        methods = {
+            async navigate (e) {
+                this.type=e.currentTarget.dataset.type;
+                await Config.clearMsgCount({'OpenID':Auth.getConfig('openId'),'type':this.type});
+                this.$navigate('./messageList?type='+this.type)
+            }
+        };
+
+       onShow(){
+           	let pages = getCurrentPages();
+            let currPage = pages[pages.length - 1];   
+            let prevPage = pages[pages.length - 2]; 
+            console.log(prevPage.route)
+            if(prevPage.route!='pages/userCenter'){
+                switch(this.type){
+                    case '1':
+                    this.count.System=0;
+                    break;
+                    case '2':
+                    this.count.Message=0;
+                    break;
+                    case '3':
+                    this.count.ResignApplication=0;
+                    break;
+                }
+            }
+       }
+        onLoad (p) {
+            this.count=JSON.parse(p.count);
+            this.isPlus=true;
+        }
+    }
+</script>

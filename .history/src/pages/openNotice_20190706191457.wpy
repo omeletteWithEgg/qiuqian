@@ -1,0 +1,58 @@
+<style lang="less">
+
+.content{
+    // height: 100%;
+    margin:40rpx 50rpx;
+    padding:20rpx;
+    border-radius: 20rpx;
+    background: #fff;
+    .title{
+        padding:14rpx 0rpx;
+    }
+    .sub-title{
+        text-align: left;
+        line-height: 40rpx;
+        padding-bottom:0px;
+        padding:15rpx 0rpx;
+    }
+    .black-text{
+        font-size:28rpx;
+        margin-top:40rpx;
+    }
+}
+
+</style>
+<template>
+    <view class="content">
+        <view class="title">
+            关注微信公众号即可获取签到提醒哦～
+        </view>
+        <view class="sub-title">感谢各位小伙伴的参与～ 「广州秋草堂」近期服务升级，关注「广州秋草堂」官方微信公众号，即 可收到每日签到提醒！请务必及时关注，避免错过签到哦～</view>
+        <view>
+            <view class="black-text">
+                #关注方法#
+            </view>
+            <view class="sub-title">
+               <view>A. 微信搜索“广州秋草堂”，点击关注</view>
+                <view >
+                B. 保存下面二维码图片，打开微信二维码找到相册图片，也 可以关注哦～
+                </view>
+            </view>
+           
+          
+        </view>
+    </view>
+</template>
+<script>
+ import wepy from 'wepy'
+
+ export default class openNotice extends wepy.page{
+    config = {
+      navigationBarTitleText: '开启签到提醒说明'
+    }
+
+    data={
+        
+    }
+ }
+</script>

@@ -7,6 +7,8 @@ export default class Validate {
       value = value.toString()
     } else if (typeof value === 'boolean') {
       return !0
+    }else if (value === '') {
+      return false
     }
 
     return value && value.length > 0
@@ -139,7 +141,7 @@ export default class Validate {
    * 判断输入值是否为空
    */
   static optional(value) {
-    return !this.required(value) && 'dependency-mismatch'
+    return !this.required(value)
   }
   /**
    * 判断升级条件

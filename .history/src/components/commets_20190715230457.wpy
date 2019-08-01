@@ -1,0 +1,562 @@
+<style lang="less" >
+@btn-primary-color:#FF6F61;
+@text-grey: #9F9F9F;
+  .comments {
+    text-align: left;
+    border-bottom: 1rpx solid #ccc;
+    box-sizing:border-box;
+     color: #505050;
+       padding-top:20rpx;
+       line-height: 40rpx;
+       font-size:28rpx;
+    .img-wrap{
+        display:inline-block;
+      }
+      .icon-cha{
+          font-size:24rpx;
+          color:#000
+      }
+      .top-icon{
+        color:rgb(255, 90, 14);
+        font-size:20rpx;
+        background:rgb(255, 217, 0);
+        border-radius:10rpx;
+        padding:0rpx 8rpx;
+        margin-left:10rpx
+      }
+   .moment-list{
+       padding: 0px 0px 20rpx 60rpx ;
+        .content-text{
+           line-height: 34rpx;
+           padding-left:12rpx;
+          //  padding-top:12rpx;
+       }
+       .flex-form.img-list{
+           flex-wrap: wrap;
+           margin-top:10rpx;
+           justify-content:left
+    
+       }
+       .img-item{
+           margin-bottom:12rpx;
+           flex:1;
+           height: 190rpx;
+           min-width:165rpx;
+           max-width:200rpx;
+           margin-right:10rpx;
+           &:nth-child(2n){
+            //  margin:0rpx 10rpx;
+           }
+        
+           &.forth{
+            min-width:210rpx;
+           }
+           &.regular:nth-child(3n){
+               margin-right:0px
+           }
+           &.first-child{
+              flex-basis:100%
+           }
+       }
+        .btn-text{
+           font-size:24rpx;
+           vertical-align:middle;
+           padding-left:6rpx;
+       }
+        .flex-form.audio-list{
+           justify-content:inherit;
+           flex-wrap: wrap;
+           margin-top:10rpx;
+       }
+       .audios{
+            height:70rpx;
+            width:30%;
+            margin-right:3%;
+             line-height: 76rpx;
+            background:@btn-primary-color;
+            border-radius:12rpx;
+             color:#fff;
+             margin-bottom:10rpx;
+             position: relative;
+             :last-child{
+                 margin-right:0
+             }
+             @keyframes spin {
+              0% {
+                opacity: .2;
+                -webkit-transform: scale(1);
+                transform: scale(1)
+              }
+              50% {
+                opacity: 1;
+                -webkit-transform: scale(1.1);
+                transform: scale(1.1)
+              }
+              100% {
+                opacity: .2;
+                -webkit-transform: scale(1);
+                transform: scale(1)
+              }
+            }
+            .iconfont{
+                position: absolute;
+                left:18rpx;
+                &.animation{
+                  animation: spin 1s linear infinite;
+                }
+                
+            }
+            .text{
+                position: absolute;
+                left:59rpx;
+                font-size: 24rpx;
+            }
+        }
+        .icon-views{
+            .btn-items{
+                padding-right:12rpx
+            }
+           .iconfont{
+               color:#808080;
+               font-size:24rpx;
+               display: inline-block;
+               vertical-align: middle;
+               &.icon-liuyan{
+                   font-size:44rpx;
+               }
+               &.icon-star{
+                   font-size:37rpx
+               }
+               &.icon-aixin{
+                   font-size:35rpx
+               }
+               &.icon-aixin.favorite{
+                  color:@btn-primary-color
+               }
+           }
+       }
+  }
+  .comments-list{
+        background:rgba(234,234,234,1);
+        font-size:24rpx;
+        font-weight:400;
+        .comments-list-item{
+            padding: 5rpx 16rpx;
+            margin:10rpx 0;
+            color:#000;
+            .user{
+              padding-right:15rpx
+            }
+        }
+        
+    }
+}
+.round-text{
+    width:35rpx;
+    height:35rpx;
+    border-radius: 100%;
+    color:#fff;
+    background: #08c;
+    font-size:22rpx;
+    line-height: 35rpx;
+    text-align: center;
+    margin-left:12rpx;
+    display:inline-block;
+
+}
+
+.content-list {
+    .sub-title{
+        padding:0rpx 40rpx 20rpx 40rpx;
+    }
+    .list-item{
+        height: 80rpx;
+        line-height: 80rpx;
+        font-size: 16px;
+        border-bottom: 1rpx solid #999;
+        &:last-child{
+            border-bottom:0rpx;
+        }
+    }
+   .modal-input{
+        display: block;
+        font-size:30rpx;
+        border:1rpx solid #999;
+        width:65%;
+        margin:0rpx auto;
+        border-radius:10rpx;
+        height:70rpx;
+        line-height:70rpx;
+        padding:0rpx 10rpx;
+    }
+    
+}
+</style>
+<template>
+    <view class="comments">
+        <view class="flex-form">
+           <view class="flex-form">
+               <view class="img-wrap" @tap="userTapFunc"><image type="scaleToFill" style="width:60rpx;height:60rpx;border-radius:100%;margin-right:20rpx" src="{{content.avatarUrl}}"></image>  </view>
+               <view>
+                  <view class="user">{{content.NickName}}<text class="top-icon" wx:if="{{content.IsTop&&showTop}}">置顶</text><text class="round-text" wx:if="{{content.IsReSign}}">补</text></view><view class="tip-text">{{content.SignDate}}</view> 
+               </view>
+           </view>
+          <!--  <view class="iconfont icon-cha" wx:if="{{showDelete}}" @tap="deleteFunc({{content.SignID}})" ></view> -->
+          <view wx:if="{{content.showMore}}" >
+           <view class="iconfont icon-Group-"  @tap="commentBntFunc"></view>
+          </view>
+       </view>
+       <view class="moment-list">
+            <view class="content-text">{{content.Context}} </view>
+            <!-- <slot name="mediaContent"> -->
+            <view  >
+              <view  wx:if="{{content.ImagesList.length>1&&content.ImagesList.length!=4}}" class="flex-form img-list">
+                <view class="img-item {{imageClass}}  regular" wx:for="{{content.ImagesList }}" wx:for-index="imageIdx" wx:for-item="image"  @tap="previewImg"  data-url="{{image}}" >
+                    <image  mode="aspectFill" style="width:100%;height:100%" src="{{image}}" ></image>
+                   
+                </view>
+              </view> 
+              <view  wx:elif="{{content.ImagesList.length==4}}" class="flex-form img-list">
+                <view class="img-item forth {{imageClass}}" wx:for="{{content.ImagesList }}" wx:for-index="imageIdx" wx:for-item="image"  @tap="previewImg"  data-url="{{image}}" >
+                    <image  mode="aspectFill" style="width:100%;height:100%" src="{{image}}" ></image>
+                   
+                </view>
+              </view>
+              <view wx:else >
+                <view style="margin-top:10rpx" wx:for="{{content.ImagesList}}" wx:for-index="imageIdx" wx:for-item="image"  @tap="previewImg"  data-url="{{image}}" >
+                    <image  mode="aspectFill" style="width:{{screenWidth*0.9}}rpx;height:{{imageHeight}}rpx" src="{{image}}" ></image>
+                </view>
+              </view>
+            </view>
+            <view class="flex-form audio-list" >
+                <view wx:for="{{content.SoundRecordingsList }}" wx:for-item="audioItem"  wx:for-index="audioIndx" data-comIndex="{{content.SignID}}" data-id="{{audioIndx}}" class="audios" @tap="audioPlay"  data-url="{{audioItem.url}}"><text class="iconfont icon-yuyin {{audioItem.animation}}" ></text><text class="text" >{{content.AudiosTimeList[audioIndx]}}"</text></view>
+            </view>
+            <!-- </slot> -->
+             <view class="comments-list" >
+              <view class="comments-list-item" wx:for="{{content.Messages}}" wx:for-index="msgIdx" wx:for-item="msg" @tap="messageClickFunc" data-index="{{msgIdx}}"  data-signId="{{content.SignID}}" data-sender="{{msg.SenderOpenID}}" data-id="{{msg}}">
+                  <text class="user">{{msg.SenderNickName}}<text wx:if="{{msg.MessageType=='2'}}"> 回复 {{msg.ReceiverNickName}}</text>：</text>
+                  <text class="detail">{{msg.ReplyContext}}</text>
+              </view>
+          </view>
+            <view class="icon-views flex-form" >
+                <view class=" flex-form">
+                    <view class="btn-items" wx:for="{{commentsBtnList}}" wx:for-index="btnIdx" wx:for-item="btn" data-index='{{btnIdx}}'  data-msgId="{{content.SignID}}" data-btn="{{btn}}" @tap="listBtnClickFunc">
+                        <view class="iconfont {{btn.icon}}"></view><text class="btn-text">{{btn.text}}</text>
+                    </view>
+                    <view class="btn-items" @tap="showScoreClick" wx:if="{{content.showScore}}" data-id='{{content.SignID}}' data-score='{{content.Score}}'>
+                        <view class="iconfont icon-star"></view><text class="btn-text" >{{content.Score>0?content.Score:"评"}}分</text>
+                    </view>
+                    <view class="btn-items"  wx:if="{{!content.showScore&&content.Score>0}}" >
+                        <view class="iconfont icon-star"></view><text class="btn-text">{{content.Score}}分</text>
+                    </view>
+                </view>
+                <view><view data-id="{{content.SignID}}" class="iconfont icon-aixin {{content.IsPraised?'favorite':''}}" @tap="favoriteFunc" ></view><text  class="btn-text" >{{content.PraisedTimes>999?'999+':content.PraisedTimes}}</text></view>
+            </view>
+        </view>
+       
+           <scoreModel 
+            :modalshow.sync="scoreModalShow"
+            righttext="确定"
+            lefttext="取消"
+            modaltitle="评分"
+            modalStyle="bottom:35%;top:32%;"
+            @confirmFunc.user="scoreConfirmFunc">
+            <view slot="content" class="content-list">
+                <view class="sub-title">1至10分的整数，1至10代表：很差至很棒</view>
+                <input type="number" value="{{scoreValue}}" @input="scoreInputFunc" placeholder="输入1至10分数值" class='modal-input'></input>
+            </view>
+        </scoreModel>
+         <deleteModel
+            :modalshow.sync="deleteModalShow"
+                righttext="确定"
+                lefttext="取消"
+                modaltitle="提示"
+                modalStyle="bottom:35%;top:35%;"
+                @confirmFunc.user="deleteComfirmFunc">
+                <view slot="content" class="content-list">
+                    <view class="sub-title">删除签到无法恢复，确认删除？</view>
+                </view>
+        </deleteModel>
+        <deleteMsg
+            :modalshow.sync="deleteMsgShow"
+                :titleshow='btnShow'
+                :btnshow='btnShow'
+                modalStyle="bottom:46%;top:47%;">
+                <view slot="content" class="content-list">
+                    <view @tap="deleteMsgFunc">{{msgContent}}</view>
+                </view>
+        </deleteMsg>
+        <modalEdit 
+        :modalshow.sync="editModalshow"
+            righttext="确定"
+            lefttext="取消"
+            modaltitle="修改签到名字"
+             modalStyle="bottom:35%;top:35%;"
+            @confirmFunc.user="editConfirmFunc">
+            <view slot="content" class="content-list">
+                <view class="sub-title">成员名字:<text>{{userNickName}}</text></view>
+                <input type="text" @blur="editInputFunc"  value="{{editValue}}" placeholder="请输入需要修改的名字" class='modal-input'></input>
+            </view>
+        </modalEdit>
+        <modalTips 
+            :modalshow.sync="modalTipShow"
+            righttext="确定"
+            lefttext="取消"
+            modaltitle="提示"
+             modalStyle="bottom:35%;top:35%;"
+            @confirmFunc.user="modalTipConfirmFunc">
+            <view slot="content" class="content-list">
+                <view class="sub-title">{{toTopText}}</view>
+            </view>
+        </modalTips>
+          <blackList 
+            :modalshow.sync="blackListShow"
+            righttext="确定"
+            lefttext="取消"
+            modaltitle="提示"
+             modalStyle="bottom:35%;top:35%;"
+            @confirmFunc.user="blackListConfirmFunc">
+            <view slot="content" class="content-list">
+                <view class="sub-title">确认将此人加入黑名单？</view>
+            </view>
+        </blackList>
+     </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import modal from './modal'
+  import Tips from '../utils/tip'
+  import Auth from '../utils/auth'
+  import Config from '../utils/config'
+
+  export default class Comments extends wepy.component {
+    components = {
+      scoreModel:modal,
+      deleteModel:modal,
+      blackList:modal,
+      modalTips:modal,
+      deleteMsg:modal,
+      modalEdit:modal
+    }
+    data={
+      scoreModalShow:false,
+      deleteMsgShow:false,
+      deleteModalShow:false,
+      btnShow:false,
+      blackListShow:false,
+      editModalshow:false,
+      modalTipShow:false,
+      shareModelShow:false,
+      scoreValue:'',
+      signID:'',
+      screenWidth:'',
+      imageHeight:'',
+      imageWidth:'',
+      deleteMsgSignId:'',
+      animation:'',
+      animationData:{},
+      editValue:'',
+      msgContent:'删除',
+      clickItem:'',
+      deleteMsg:'',
+      toTopText:'',
+      me:Auth.getConfig('openId'),
+      deleteMsgId:'',
+      userNickName:''
+    }
+     props = {
+      content:{
+          type:Object,
+          default:{},
+          twoWay: true
+      },
+      list:{
+        type:Array,
+        default: ['删除记录','设为置顶','加入黑名单'],
+        twoWay: true
+      },
+      showDelete:{
+         type:Boolean,
+          default:true
+      },
+      showTop:{
+         type:Boolean,
+          default:true
+      },
+      showMore:{
+         type:Boolean,
+         default:false
+      },
+      ifScore:{
+          type:Boolean,
+          default:false
+      },
+      commentsBtnList:{
+        type:Array,
+        default:[]
+      }
+    }
+    events={
+      getMomentsList(value){
+        let list=[];
+        value.forEach(item => {
+          if(!item.SoundRecordingsList)return;
+          let objArr=[];
+          item.SoundRecordingsList.forEach(subitem=>{
+            let obj={};
+            obj.url=subitem;
+            obj.animation='';
+            objArr.push(obj)
+          })
+          item.SoundRecordingsList=objArr;
+        // this.content.ifScore=item.showScore;
+        });
+      },
+      toTop(value){
+        this.content.IsTop=!this.content.IsTop
+      },
+      blackListShowChange(value){
+        this.blackListShow=false;
+      },
+      upDateMessage(value){
+        this.content=value
+      }
+    }
+    methods={
+      showScoreClick(e){
+        if(e.currentTarget.dataset.score>0){
+          return false
+        }
+        this.scoreValue='';
+        this.signID=e.currentTarget.dataset.id;
+        this.scoreModalShow=true;
+      },
+      previewImg(e){
+        let url=e.currentTarget.dataset.url;
+        let id=e.currentTarget.dataset.comIndex;
+        this.$emit('previewImg',{'url':url,'id':id});
+      },
+      audioPlay(e){
+        let index=e.currentTarget.dataset.id;
+        let url=e.currentTarget.dataset.url;
+        let id=e.currentTarget.dataset.comindex;
+        this.$emit('audioPlay',{'url':url,'id':id,'index':index});
+      },
+      userTapFunc(){
+        this.$emit('openUserRecords',{'openId':this.content.OpenID,'nickName':this.content.NickName,'avatarUrl':this.content.avatarUrl});
+      },
+      scoreInputFunc(e){
+          this.scoreValue=e.detail.value;
+      },
+      editInputFunc(e){
+        this.editValue=e.detail.value
+      },
+       scoreConfirmFunc(e){//评分
+       console.log(parseInt(this.scoreValue))
+       if(isNaN(this.scoreValue)){
+          Tips.toast('请输入正整数','none');
+           return false
+       }else if(parseInt(this.scoreValue)>10){
+          Tips.toast('分数需要是1-10分的整数','none');
+          return false
+        }else if(parseInt(this.scoreValue)<1){
+          Tips.toast('分数需要是1-10分的整数','none');
+          return false
+        }else if((this.scoreValue).match(/^[0-9]+\.?[0-9]+?$/)){
+           Tips.toast('分数需要是1-10分的整数','none');
+          return false
+        }else{
+          this.scoreModalShow=false;
+          this.$emit('setScore',{'score':this.scoreValue,'SignID':this.signID});
+        }
+      },
+      editConfirmFunc(){
+        this.$emit('editName',this.editValue)
+     },
+    deleteMsgFunc(){
+      let type;
+      this.deleteMsgShow=false;
+      this.msgContent=='回复'?type='1':type='2'
+      this.$emit('deleteMsgFunc',{'msgId':this.deleteMsg,'signId':this.deleteMsgSignId,'openId':this.content.OpenID,'type':type})//openid是被删除者   adminopenid是删除者
+    },
+    listBtnClickFunc(e){
+      let listIndex = e.currentTarget.dataset.index;
+      let msgId = e.currentTarget.dataset.msgId;
+      this.$emit('listBtnClickFunc',{'id':listIndex,'msg':this.content,'msgId':msgId})
+    },
+    async modalTipConfirmFunc(){
+      this.$emit('toTopFunc',this.content);
+      this.modalTipShow=false;
+    },  
+    async blackListConfirmFunc(){
+      this.$emit('blackListFunc',this.content)
+    },
+    messageClickFunc(e){
+      this.deleteMsg=e.currentTarget.dataset.id;
+      this.deleteMsgSignId=e.currentTarget.dataset.signid;
+      this.deleteMsgId=e.currentTarget.dataset.index;
+      this.deleteMsgShow=true;
+      if(e.currentTarget.dataset.sender==Auth.getConfig('openId')){
+        this.msgContent='删除'
+      }else{
+        this.msgContent='回复'
+      };
+    },
+     commentBntFunc(e){
+        if(this.content.IsManager!==false&&this.list.length>1){
+            if(this.content.IsTop==true){
+              this.list[1]='取消置顶';
+              this.toTopText="确认取消置顶此条动态？"
+            }else{
+              this.list[1]='设置为置顶';
+              this.toTopText="最多只能设置3条动态置顶，第4条会替换掉置顶的第1条动态，确认置顶此条动态？"
+            }
+         }
+        Tips.actionSheet(this.list).then((res)=>{
+          if(res.tapIndex===2){//加入黑名单
+            if(this.content.OpenID==Auth.getConfig('openId')){
+              Tips.confirm('不支持将自己加入黑名单');
+              return
+            }else{
+              this.blackListShow=true;
+              this.$apply()
+            }
+          };
+          if(res.tapIndex===1){//设为置顶
+            this.modalTipShow=true;
+            this.$apply()
+          };
+          if(res.tapIndex===0){//删除
+            this.deleteModalShow=true;
+            this.$apply()
+          }
+        })
+      },
+      favoriteFunc(e){
+         // let index = e.currentTarget.dataset.key;
+         let signId = e.currentTarget.dataset.id;
+         
+         this.$emit('favoriteFunc',{'id':signId})
+     },
+    deleteComfirmFunc(){
+       this.$emit('deleteItem',this.content);
+       this.deleteModalShow=false
+    },
+     deleteFunc(e){
+        this.deleteModalShow=true;
+     },
+    
+    }
+  
+    onLoad(){
+      const that=this;
+       wx.getSystemInfo({
+        success(res) {
+          that.screenWidth=res.windowWidth
+        }
+      });
+     
+    }
+   
+  }
+</script>

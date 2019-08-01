@@ -1,0 +1,317 @@
+<style lang="less" scoped>
+  page>view{
+    height: 100%
+  }
+  scroll-view{
+    height:100%
+  }
+ .blank-center{
+   height: 100%;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   >view{
+     width:100%
+   }
+  
+ }
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .userinfo-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+  .container{
+    padding:30rpx 40rpx 20rpx 40rpx;
+    background:#f5f5f5;
+  }
+  .content-list text{
+    display: block;
+    padding:20rpx 0px;
+    font-size:14px;
+    border-top:1px solid #999;
+    &:first-child{
+      border-top:0px
+    }
+  }
+
+    .modal-list{
+      padding:50rpx 40rpx 20rpx 40rpx;
+      input{
+        width:60%;
+        height:72rpx;
+          text-indent:15rpx;
+          color:#000;
+          font-size:14px;
+          box-sizing:border-box;
+        display: inline-block;
+        margin-right:10rpx;
+        border:1rpx solid rgba(149,152,154,1);
+         border-radius: 12rpx;
+      }
+     .modal.btn-medium{
+        line-height:72rpx;
+        border-radius: 12rpx;
+        display: inline-block;
+      }
+  }
+</style>
+<template>
+<view>
+  <view class="container" wx:if="{{list.length>0}}">
+       <repeat for="{{list}}" key="index" index="index" item="item">
+          <indexList
+          :bgImg="item.BackgroundURL"
+          :title="item.GroupTitle"
+          :id="item.GroupID"
+          :index="index"
+          :nickname="item.NickName"
+          bottomcontext="true"
+          :status="item.status"
+          :headerImg="item.avatarUrl"
+          :righttext="item.righttext"
+          :bottomtext="item.UsersNum"
+          :startdate="item.BeginDate"
+          :enddate="item.EndDate"
+          :iconstatus="item.iconstatus"
+          @seeDetail.user="goDetail"
+          @deleteItem.user="deleteItem"
+          ></indexList>
+       </repeat>
+        <view class='sub-title no-data' wx:if="{{loadMore}}">{{loadMoreText}}</view>
+       <modal modaltitle="提示"
+            :modalshow.sync="modalshow"
+            :righttext.sync="righttext"
+            :lefttext.sync="lefttext"
+             @cancelFunc.user="cancelFunc"
+             modalStyle="bottom:35%;top:30%;"
+            @confirmFunc.user="confirmFunc">
+            <view slot="content" class="modal-list">
+              <view wx:if="{{!selfDelete}}">
+                <input type="text" value="{{valiCode}}" bindinput="inputValicode"></input>
+                 <button class="modal btn-medium">{{valiBtnText}}</button>
+                <view class="sub-title" style="padding-top:20rpx">删除签到不能恢复，确定要删除吗？</view>
+              </view>
+              <view wx:else class="sub-title">
+                确定退出签到，是否保留签到信息？
+              </view>
+            </view>
+        </modal>
+  </view>
+  <view wx:else class="blank-center">
+    <view>
+     <view class="sub-title">还没有创建或是参与过任何签到</view>
+      <button class="btn-large" @tap="createNew">创建一个新的签到</button>
+      </view>
+  </view>
+</view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import indexList from '../components/indexList';
+  import modal from '../components/modal';
+  import Auth from '../utils/auth';
+   import Config from '../utils/config';
+  import Tips from '../utils/tip';
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '每日膳膳签',
+      enablePullDownRefresh:true
+    }
+    components = {
+      indexList: indexList,
+      modal:modal
+    }
+    data = {
+      loadMore:false,
+      hasMore:true,
+      loadMoreText:'加载中...',
+      lefttext:'取消',
+      righttext:'确定',
+      valiCode:'',
+      pageIndex:1,
+      valiBtnText:'',
+      selfDelete:true,
+      deleteId:'',
+      deleteIndex:'',
+      scene:'',
+      deleteTyep:'',
+      modalshow:false,
+      list: [ ]
+    }
+    methods ={
+      inputValicode(e){
+        console.log(e.detail.value)
+         this.valiCode=e.detail.value
+      },
+      goDetail(msg){
+         this.$navigate('./signItemDetail?GroupID='+msg.id+'&status='+msg.status+'&signTimes='+this.list[msg.index].SignTimes+'&isManager='+this.list[msg.index].IsManager)
+      },
+      async deleteItem(id){
+        this.deleteIndex= id.index;
+        Auth.getConfig('openId')!=this.list[this.deleteIndex].OpenID?this.selfDelete=true:this.selfDelete=false
+        if(this.selfDelete){
+          this.righttext='保留';
+          this.lefttext='不保留';
+        }else{
+           this.righttext='确定';
+          this.lefttext='取消';
+          this.valiCode='';
+          this.valiBtnText=await Config.verificationCode({'GroupID':id.id});
+        }
+        this.modalshow=true;
+        this.$apply();
+        this.deleteId =id.id;
+      },
+      //计算签到报名结束日期是否截止
+      calcStatus(item){
+        let BeginDate = new Date(item.BeginDate).getTime();
+        let EndDate = new Date(item.EndDate).getTime();
+        let today=new Date().getTime();
+        if(EndDate<today){
+          item.status='已结束';
+          item.iconstatus='close';
+        }else if(BeginDate>today){
+          item.status= '未开始';
+          item.iconstatus= 'close';
+        }else if(EndDate>today&&BeginDate<today){
+          item.status= '报名中';
+          item.iconstatus= 'in';
+        }
+      },
+      createNew(){
+        this.$navigate('./addNewSign')
+      },
+      async confirmFunc(){
+          if(!this.selfDelete){
+            if(this.valiCode==''){
+              Tips.toast('请输入验证码','none');
+              return false;
+            }
+            this.list.forEach(async (item,index) => {
+              if(item.GroupID==this.deleteId){
+                let url='group/delete?GroupID='+this.deleteId+'&code='+this.valiCode;
+                let res= await Config.deleteGroup(url);
+                if(res){
+                  this.modalshow=false;
+                  Tips.toast("删除成功",'success');
+                  this.list.splice(index,1);
+                  this.$apply()
+                }else{
+                  Tips.toast("删除失败",'none')
+                }
+              }
+            });
+          }else{
+          
+             this.list.forEach(async (item,index) => {
+              if(item.GroupID==this.deleteId){
+                let url=  '/user/outGroup?GroupID='+this.deleteId+'&OpenID='+Auth.getConfig('openId')+'&type=0';
+                let res= await Config.outGroup(url);
+                if(res){
+                  this.modalshow=false;
+                  Tips.toast("已退出小组",'success');
+                  this.list.splice(index,1);
+                  this.$apply()
+                }else{
+                  Tips.toast("退出失败",'none')
+                }
+              }
+            });
+          }
+      },
+      cancelFunc(){
+        if(this.selfDelete){
+          this.list.forEach(async (item,index) => {
+                if(item.GroupID==this.deleteId){
+                  let url=  '/user/outGroup?GroupID='+this.deleteId+'&OpenID='+Auth.getConfig('openId')+'&type=1';
+                  let res= await Config.outGroup(url);
+                  if(res){
+                    this.modalshow=false;
+                    Tips.toast("已退出小组",'success');
+                    this.list.splice(index,1);
+                    this.$apply()
+                  }else{
+                    Tips.toast("退出失败",'none')
+                  }
+                }
+              });
+            }
+      }
+    }
+     onPullDownRefresh(e){
+        this.pageIndex=1;
+        this.hasMore=true;
+        this.getData();
+        wx.stopPullDownRefresh();
+      }
+      onReachBottom(e){
+         if(this.hasMore==false)
+          {return};
+          this.loadMore=true;
+          this.loadMoreText='加载中...';
+          this.pageIndex+=1;
+          this.getData();
+      }
+    async getData(){
+      let params={
+        'OpenID':Auth.getConfig('openId')?Auth.getConfig('openId'):"",
+        'pageIndex':this.pageIndex,
+        'pageSize':10
+      }
+      let data=await Config.myGroup(params);
+       if(data.Count==0){
+        this.hasMore=false;
+        this.loadMoreText='暂无更多数据';
+        this.$apply();
+        return
+      };
+      if(this.pageIndex==1){
+        this.list = data.Groups;
+      }else{
+        this.list=this.list.concat(data.Groups);
+      }
+      this.list.forEach((item)=>{
+        this.methods.calcStatus(item);
+      })
+      this.$apply();
+    }
+   async onShow(){
+     this.pageIndex=1;
+     if(Object.keys(wepy.$instance.globalData.auth).length==0){
+         this.$navigate('/pages/login?optionId='+this.optionId+"&scene="+this.scene)
+      }
+      else{
+        let messageCount = await Config.getMessageCount({'OpenID':Auth.getConfig('openId')});
+        if(messageCount.Total>0){
+          Auth.setConfig('messageCount',messageCount.Total)
+          wx.setTabBarBadge({
+            index: 2,
+            text:JSON.stringify(Auth.getConfig('messageCount'))
+          });
+        }
+         
+        this.getData()
+      }
+    }
+    onLoad(Option){
+      console.log('scene'+wepy.$instance.globalData.scene==true)
+      if(Option.scene==true||wepy.$instance.globalData.scene==true){
+        this.scene=true;
+        this.optionId=Option.id;
+        if(Object.keys(wepy.$instance.globalData.auth).length>0){
+          this.$navigate('./signItemDetail?GroupID='+this.optionId)
+        }
+      }
+    }
+  }
+</script>

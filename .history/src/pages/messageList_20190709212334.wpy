@@ -1,0 +1,229 @@
+
+<style lang="less">
+@btn-primary-color:#FF6F61;
+@text-grey: #9F9F9F;
+.container{
+    position:relative;
+    padding:0 20rpx;
+    .tip-text{
+        padding:29rpx 0 0 0;
+        text-align: left;
+    }
+    .item{
+        margin: 30rpx 0;
+        background:#fff;
+        padding:30rpx 40rpx;
+        height:auto;
+        border-radius:24rpx;
+    }
+    .title{
+        color:#000;
+        font-size:32rpx;
+        margin-bottom:20rpx;
+    }
+    .sub-title{
+        text-align:left;
+        line-height:38rpx;
+        color:#808080;
+        &.no-data{
+            text-align:center;
+        }
+    }
+    .button{
+        text-align:center;
+        .btn-round{
+            display: inline-block;
+            margin-right:10px;
+        }
+         &.align-right{
+            text-align:right;
+        }
+    }
+    .user-info{
+        justify-content:flex-start;
+        margin-bottom:20rpx;
+        .img-wrap{
+          display:inline-block;
+          margin-right:20rpx;
+        }
+        .user-name{font-size:26rpx;color:#505050}
+       .tip-text{
+         padding:10rpx 0 0 0 ;
+       }
+    }
+   
+}
+.reply-content{
+    background: #f2f2f2;
+    padding:20rpx;
+    margin-bottom:20rpx;
+    .tip-text{
+        text-align: right;
+        padding-top:0rpx
+    }
+}
+</style>
+<template>
+   <scroll-view class="container"  scroll-y bindscrolltolower="scrollHandler" bindscrolltoupper="topLoad">
+      <view  wx:if="{{type=='1'}}" >
+        <view  wx:if="{{list.length>0}}">
+            <view class="item"  wx:for="{{list}}" wx:if="{{list.length>0}}" >
+                <view class="tip-text">{{item.MessageDate}}</view>
+                <view class="title">{{item.GroupTitle}}</view> 
+                <view class="content">
+                    <view class="sub-title">
+                        {{item.MessageParentContext }}
+                    </view>
+                </view>
+            </view>
+        </view>
+        <view wx:else class="sub-title no-data">暂无数据</view>
+    </view>
+    <view  wx:if="{{type=='3'}}" >
+        <view  wx:if="{{list.length>0}}">
+            <view class="item"  wx:for="{{list}}">
+                <view class="user-info flex-form">
+                    <view class="img-wrap"><image type="scaleToFill" style="width:64rpx;height:64rpx;border-radius:100%" src="{{item.avatarUrl}}"></image></view>
+                    <view>
+                        <view class="user-name">{{item.SenderNickName }}</view><view class="tip-text">{{item.MessageDate }}</view> 
+                    </view>
+                </view>
+                <view class="content"><view class="sub-title" wx:if="{{item.MessageType==3}}">{{item.SenderNickName}}{{item.MessageParentContext}}</view>
+                 <view class="reply-content">{{item.ReplyContext}} <view class="sub-title" wx:if="{{item.MessageType==9}}">  : {{item.SenderNickName}}{{item.ReplyContext}}补签申请</view><view class="tip-text">内容来自{{item.GroupTitle}}</view></view></view>    
+                <view class="button" wx:if="{{item.MessageType==3&&item.IsReaded==false}}">
+                    <button class="btn-round " @tap="agree" data-id="{{index}}"  disabled="{{item.IsReaded}}">
+                        {{item.agreeBtn}}
+                    </button>
+                    <button class="btn-round disabled" @tap="disagree" data-id="{{index}}"  disabled="{{item.IsReaded}}">
+                        {{item.disagreeBtn}}
+                    </button>
+                </view>
+            </view>
+        </view>
+         <view wx:else class="sub-title no-data">暂无数据</view>
+    </view>
+     <view  wx:if="{{type=='2'}}">
+        <view  wx:if="{{list.length>0}}">
+            <view class="item" wx:for="{{list}}" >
+                <view class="user-info flex-form">
+                    <view class="img-wrap"><image type="scaleToFill" style="width:64rpx;height:64rpx;border-radius:100%;" src="{{item.avatarUrl}}"></image></view>
+                    <view>
+                    <view class="user-name">{{item.SenderNickName }}</view><view class="tip-text">{{item.MessageDate}}</view> 
+                </view>
+                </view>
+                <view class="content"><view class="sub-title">{{item.ReplyContext}}</view></view> 
+                <view class="reply-content"><view class="sub-title"  wx:if="{{item.MessageParentContext&&item.MessageParentContext!='null'}}">{{item.MessageParentContext}}</view><view class="tip-text">内容来自{{item.GroupTitle}}</view></view> 
+                <view class="button align-right" >
+                    <button class="btn-round " @tap="toReply" data-id="{{index}}" >
+                        回复
+                    </button>
+                </view>
+            </view>
+        </view>
+        <view wx:else class="sub-title no-data">暂无数据</view>
+    </view>
+    <view class='sub-title no-data' wx:if="{{loadMore}}">{{loadMoreText}}</view>
+  </scroll-view>
+</template>
+<script>
+    import wepy from 'wepy';
+    import Auth from '../utils/auth'
+    import Config from '../utils/config'
+    import Tips from '../utils/tip'
+
+
+    export default class Messages extends wepy.page {
+        config = {
+            'navigationBarTitleText': '消息列表'
+        };
+      
+
+        data = {
+            list:[],
+            type:'',
+            loadMore:false,
+            hasMore:true,
+            pageIndex:1,
+            type3Count:0,
+            loadMoreText:'加载中...'
+        };
+        methods = {
+            toReply(e){
+                let id=e.currentTarget.dataset.id;
+                this.$navigate('./postCommet?msg='+JSON.stringify(this.list[id])+'&type=2&id='+this.list[id].GroupID+"&isComment=false");
+            }, 
+            topLoad(e){
+                this.pageIndex=1;
+                this.hasMore=true;
+                this.getList();
+                this.$apply();
+            },
+            async disagree(e){
+                let id=e.currentTarget.dataset.id;
+                 await Config.setResign('group/setReSignTimes?GroupID='+this.list[id].GroupID+'&MessageID='+this.list[id].MessageID+'&OpenID='+this.list[id].SenderOpenID+'&times=-1&AdminOpenID='+Auth.getConfig('openId'));
+                Tips.toast('已拒绝补签申请');
+                this.list[id].IsReaded=true;
+                this.list[id].disagreeBtn='已拒绝';
+                this.type3Count-=1;
+                Auth.setConfig('type3Count',this.type3Count);
+                this.$apply()
+
+            }, 
+            async agree(e){
+                let id=e.currentTarget.dataset.id;
+                await Config.setResign('group/setReSignTimes?GroupID='+this.list[id].GroupID+'&MessageID='+this.list[id].MessageID+'&OpenID='+this.list[id].SenderOpenID+'&times=1&AdminOpenID='+Auth.getConfig('openId'));
+                Tips.toast('新增成功');
+                this.agreeBtn='已同意';
+
+                this.list[id].IsReaded=true;
+                this.list[id].agreeBtn='已同意';
+                this.type3Count-=1;
+                Auth.setConfig('type3Count',this.type3Count)
+                this.$apply()
+            },
+            scrollHandler(e){
+                this.loadMore=true;
+                if(this.hasMore==false)return;
+                this.pageIndex+=1;
+                this.getList();
+            }
+        };
+
+        async getList(){
+            let param={
+              'OpenID':Auth.getConfig('openId'),
+              'type':this.type,//1：系统消息 2：评论回复消息 3：审核消息
+              'pageIndex':this.pageIndex,
+              'pageSize':10
+           }
+           let list = await Config.messageList(param);
+           if(list.Count==0){
+                this.hasMore=false;
+                this.loadMoreText='暂无更多数据';
+                this.$apply();
+                return
+            };
+            if(this.pageIndex==1){
+                this.list=list.Messages;
+            }else{
+                this.list=this.list.concat(list.Messages);
+            };
+            if(this.type=='3'){
+                this.list.forEach(item => {
+                    if(item.MessageType==3&&item.IsReaded==false){
+
+                        item.agreeBtn='同意';
+                        item.disagreeBtn='拒绝'
+                    }
+                });
+            }
+            this.$apply()
+        }
+        async onLoad (p) {
+            this.type=p.type;
+            this.type3Count=p.type3Count;
+            this.getList()
+         
+        }
+    }
+</script>

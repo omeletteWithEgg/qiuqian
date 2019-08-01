@@ -1,0 +1,165 @@
+<template>
+<view wx:if="{{modalshow}}">
+ <view class="modal"  style="{{modalStyle}}">
+    <view hidden="{{!titleshow}}">
+      <view class="title" >
+         {{modaltitle}} 
+      </view>
+     </view>
+     <block  wx:if="{{canIUse}}">
+      <view class="modal-body" >
+          <slot name="content"></slot>
+      </view>
+      <view hidden="{{!btnshow}}"  >
+        <view class="button-view">
+          <button class="left-button" @tap="cancel">{{lefttext}}</button>
+          <button
+            class="right-button"
+            hidden="{{!rightbtnshow}}"
+            @tap="confirm"
+          >
+          {{righttext}}
+          </button>
+          </view>
+        </view>
+      </block>
+    <view wx:else>请升级微信版本</view>
+  </view>
+  <view  wx:if="{{modalshow}}" class="back-drop" @tap="closeModal"></view>
+</view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class modal extends wepy.component{
+    data={
+       canIUse: wx.canIUse('button.open-type.getUserInfo')
+    }
+    props = {
+
+       modalshow:{
+           type:Boolean,
+           default:false,
+           twoWay: true
+       },
+       modalStyle:{
+           default:'top:20%;bottom:20%'
+       },
+       rightbtnshow:{
+           type:Boolean,
+           default:true
+       },
+       modaltitle:{
+           type:String,
+           default:''
+       },
+       lefttext:{
+           type:String,
+           default:''
+       },
+       openType:{
+           type:String,
+           default:''
+       },
+       righttext:{
+           type:String,
+           default:''
+       },
+       btnshow:{
+           type:Boolean,
+           default:true
+       },
+       titleshow:{
+           type:Boolean,
+           default:true
+       }
+     
+    }
+    events = {
+      
+    }
+    methods={
+       confirm(){
+        //    this.modalshow = false;
+           this.$emit('confirmFunc')
+       },
+       cancel(){
+           this.$emit('cancelFunc',this.modalshow)
+           this.modalshow = false;
+       },
+       closeModal(){
+           this.modalshow = false;
+       },
+       
+    }
+}
+</script>
+<style lang='less' scoped>
+.modal{
+    position: fixed;
+    left:100rpx;
+    right:100rpx;
+    text-align: center;
+    z-index:2;
+    border-radius: 20rpx;
+    background: #fff;
+    .title{
+        line-height: 100rpx;
+        color:#000;
+        position: relative;
+        font-size:32rpx;
+        text-align: center;
+    }
+    .modal-body{
+        font-size:28rpx;
+        position:absolute;
+        top:50%;
+        width:100%;
+        text-align: center;
+        -webkit-transform: translateY(-56%);
+        transform: translateY(-56%)
+    }
+    
+    .button-view{
+        display: webkit-flex;
+        display: flex;
+        text-align: center;
+        align-items: center;
+        justify-content: space-evenly;
+        font-size:14px;
+        position: absolute;
+        width:100%;
+        height: 64rpx;
+        border-top:1rpx solid rgb(221, 221, 221);
+        bottom:4rpx;
+        .left-button,.right-button{
+            font-size:28rpx;
+            border:0px;
+            color:#000;
+            width:48%;
+            box-sizing:border-box;
+            text-align: center;
+            background:#fff;
+            height:100%;
+            border-radius:0rpx;
+            padding:0rpx;
+        }
+        .left-button{
+            border-right:1rpx solid #999;
+            // border-radius:0rpx 0rpx 20rpx 0rpx;
+        }
+  
+    }
+}
+
+.back-drop{
+    background: rgba(0,0,0,0.3);
+    position: fixed;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    z-index: 1;
+}
+</style>
+
+

@@ -1,0 +1,151 @@
+<style lang="less">
+    .top-view{
+        padding: 20rpx 40rpx;
+    }
+    .content-view{
+       .tip-text{
+           padding:20rpx 40rpx;
+       }
+        .textarea-input{
+            position: relative;
+             padding:20rpx 40rpx;
+            background: #fff;
+          
+            textarea{
+                font-size:28rpx;
+                color:#000;
+                width:100%;
+                box-sizing: border-box;
+            }
+        }
+    }
+   
+</style>
+<template>
+    <form bindsubmit="savePost" report-submit='true'>
+        <view class="flex-form top-view">
+            <button class="btn-round disabled" @tap="cancel">取消</button>
+            <button class="btn-round" form-type="submit">完成</button>
+        </view>
+        <view class="content-view">
+            <view class="textarea-input">
+             <textarea name="conetent" placeholder="请输入留言内容" maxlength='-1' bindinput='getContentFunc' cursor-spacing='100'/>
+            </view>
+        </view>
+            
+    </form>
+    
+</template>
+<script>
+ import wepy from 'wepy';
+ import Auth from '../utils/auth';
+  import Comments from '../components/commets'
+
+ import Config from '../utils/config';
+ import Tips from '../utils/tip';
+
+  export default class postCommet extends wepy.page {
+     config = {
+      navigationBarTitleText: '留言'
+    }
+
+    data={
+      content:'',
+      openerId:'',
+      type:'',
+      item:'',
+      prevPageIndex:0,
+      isComment:true,
+      groupInfo:''
+    }
+    methods = {
+        async savePost(e){
+            let url=Config.baseUrl+'user/group/message?OpenID='+Auth.getConfig('openId')+'&GroupID='+this.openerId;
+            let MessageParentContext;
+            let MessageParentID;
+            let ReceiverOpenID=this.groupInfo.OpenID;
+            let ReceiverNickName = this.groupInfo.NickName;
+            let SenderNickName = JSON.parse(Auth.getConfig('userInfo')).nickName
+            if(this.type==1){//签到评论
+                MessageParentContext=this.groupInfo.Context;//签到的正文
+                MessageParentID=this.groupInfo.SignID;
+            }else if(this.type==2){//回复，给管理员留言
+                this.groupInfo.MessageParentContext?MessageParentContext=this.groupInfo.MessageParentContext:MessageParentContext=null;
+                 this.groupInfo.ReplyContext?MessageParentContext=this.groupInfo.ReplyContext:MessageParentContext=null;
+                 if(this.isComment=='false'){
+                    ReceiverOpenID=this.groupInfo.OpenID;
+                    ReceiverNickName = this.groupInfo.NickName
+                 }else{
+                    SenderNickName=this.groupInfo.ReceiverNickName;
+                     ReceiverNickName=this.groupInfo.SenderNickName;
+                       ReceiverOpenID=this.groupInfo.SenderOpenID;
+                 }
+                this.groupInfo.MessageParentID?MessageParentID=this.groupInfo.MessageParentID:MessageParentID=0;
+            }else if(this.type==3){//系统通知（置顶、删除）
+                MessageParentContext='';
+                MessageParentID='';
+                SenderOpenID=this.reciveId;
+                SenderNickName=this.reciveName
+            }
+            let params={
+                'SignID':this.groupInfo.SignID,
+                 'formId':e.detail.formId,
+                "MessageParentID":MessageParentID,//如果是评论，值为SignID;如果是回复，值为要回复的MessageID；如果是给管理员留言或系统通知，值为0
+                "MessageParentContext":MessageParentContext,//如果是评论，值为签到的正文;如果是回复，值为要回复的消息正文；如果是给管理员留言或系统通知，值为null
+                "ReplyContext":this.content,
+                "MessageType":this.type,//1：签到评论 2:回复 4：系统通知（置顶、删除）
+                "SenderOpenID":Auth.getConfig('openId'),//发送者的OpenID（如果是置顶或删除，发送者为该小组创建者的OpenID）
+                "SenderNickName":SenderNickName,//发送者的微信名（如果是置顶或删除，发送者为该小组创建者的微信名）
+                "ReceiverOpenID":ReceiverOpenID,
+                "ReceiverNickName":ReceiverNickName
+            }
+            let res = await Config.postComment(url,params);
+            if(this.isComment!='false'){
+                this.item['Messages'].push(res);
+            }
+            Tips.toast("操作成功",'');
+             let pages = getCurrentPages();
+            let prevPage = pages[pages.length - 2]; 
+            setTimeout(()=>{
+                Auth.backOpener({'groupInfo':this.item},()=>{
+                if(prevPage.route=='pages/commentDetail'){
+                    prevPage.groupInfo=this.item;
+                  }
+                  if(prevPage.route=='pages/signItemDetail'){
+                   prevPage.myMomentsList[this.prevPageIndex]=this.item;
+                    // prevPage.loadList('','');
+                  }
+                  if(prevPage.route=='pages/myRecords'){
+                   prevPage.myMomentsList[this.prevPageIndex]=this.item;
+                    // prevPage.loadList();
+                  }
+                });
+            },500)
+        },
+        getContentFunc(e){
+            this.content=e.detail.value
+        },
+        cancel(){
+             wx.navigateBack()
+        }
+    }
+    onLoad(option){
+        console.log(JSON.stringify(option))
+        this.openerId=option.id;
+        this.item=JSON.parse(option.groupInfo);
+        this.type=option.type;
+        if(option.msg){
+             this.groupInfo=JSON.parse(option.msg);
+        }
+        if(option.index){
+          this.prevPageIndex=parseInt(option.index);
+        }
+        this.isComment=option.isComment;
+        
+    }
+
+}
+
+ 
+  
+</script>

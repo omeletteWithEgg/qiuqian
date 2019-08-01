@@ -1,0 +1,131 @@
+<style lang="less" scoped>
+@btn-primary-color:#FF6F61;
+page{height:100%;overflow:hidden}
+.bg-img{
+    width:100%;
+    height:260rpx;
+    position: absolute;
+    top:0;
+    z-index: 1;
+}
+.scroll-view-child{
+	 padding:40rpx 40rpx;
+    box-sizing: border-box;
+   
+  }
+.view-top{
+    position: relative;
+    z-index: 2;
+    margin-top:80rpx;
+    padding:34rpx 26rpx 0 26rpx;
+      background:#fff;
+    border-radius:12rpx;
+    font-size:24rpx;
+    color:#6C6C6C;
+    margin-bottom:20rpx;
+    .content-wrap{
+      height:600rpx;
+      overflow:scroll
+    }
+    .img-text{
+        padding:20rpx 0px;
+        border-bottom:1rpx solid rgba(227,227,227,1);
+        margin-bottom: 20rpx;
+       
+    };
+     .title{
+            color:#4e4e4e;
+            line-height:100rpx;
+            font-size: 16px;
+            text-align:center;
+        }
+    
+    .content{
+        padding:20rpx 0rpx;
+    }
+    .content-title{
+        padding:28rpx 0px;
+        justify-content:space-around;
+         position: relative;
+         &:before{
+            content:"";
+            display: inline-block;
+            height:1rpx;
+            background: rgba(227,227,227,1);
+            position: absolute;
+            top:0rpx;
+            left: -26rpx;
+            right:-26rpx;
+         }
+        >view:last-child{
+            border-left:1rpx solid rgba(227,227,227,1);
+            flex:1;
+			text-align:center;
+         }
+        button{
+	        font-size:24rpx;
+	        border:none;
+	        flex:1;
+			padding:0rpx;
+	        color:#6C6C6C;
+	    }
+    }
+
+}
+
+
+</style>
+<template>
+<view class="content-view" style="height:100%;overflow:hidden">
+    <image src="{{item.BackgroundImg}}" type="widthFix" class="bg-img"></image>
+    <view class="scroll-view-child">
+        <view class="view-top">
+            <view class="title">{{item.Title}}</view>
+            <view class="img-text flex-form ">
+                <view>
+                <view class="user">{{item.SenderName}}</view>
+                </view>
+                <view class="comment-btn">{{item.CreateTime}}</view>
+            </view>
+            <view class="content-wrap">
+              <view wx:for="{{item.ImagesList}}" wx:for-item="subItem">
+                <image src="{{subItem}}" mode="widthFix" style="width:100%;margin-bottom:10px;display:block;"></image>
+              </view>
+              <view class="content">{{item.Context}}</view>
+            </view>
+             <view class="content-title flex-form">
+                 <button  class="share-button" open-type="share" plain='true'  data-text="分享给微信好友">分享给微信好友</button>
+                <view @tap="shareImg">生成分享图片</view>
+            </view>
+        </view>
+    </view>
+</view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Tips from '../utils/tip'
+
+  export default class noticeDetail extends wepy.page {
+     config = {
+      navigationBarTitleText: '通知详情',
+      disableScroll:true
+    }
+
+   data = {
+   	 item:{}
+    }
+   methods = {
+   	shareWeChat(){
+   	},
+   	shareImg(){
+		this.$navigate('./shareImage?bgImg='+this.item.BackgroundImg+'&name='+this.item.SenderName+'&id='+this.item.GroupID+'&title='+this.item.Title+'&type=notice'+'&date='+this.item.CreateTime);
+   	}
+   }
+
+  onLoad(option){
+      this.item=JSON.parse(option.item);
+  }
+
+}
+</script>

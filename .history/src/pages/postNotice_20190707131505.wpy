@@ -1,0 +1,346 @@
+<style lang="less" scoped>
+@btn-primary-color:#FF6F61;
+@text-grey: #9F9F9F;
+.form-section{
+  margin-bottom:20rpx;
+  position: relative;
+  picker{
+  position: relative;
+  }
+
+  .input-row-right{
+    .input-row{
+      border-top:0
+    }
+  }
+  .input-img.input-row{
+      height:140rpx;
+      padding:20rpx 40rpx;
+    text-align: left;
+    .section-title{
+      float:left;
+      color:#808080;
+    }
+    .qrcode-img{
+      margin-left: 40rpx;
+      height: 100%;
+    }
+    .iconfont{
+      font-size:60px;
+      line-height: 140rpx;
+      padding-left:20rpx;
+      float:left
+    }
+  }
+
+  .icon-check{
+    height: 40rpx;
+  }
+
+  .label-right-text{
+    padding-right:40rpx;
+  }
+
+}
+  .section{
+    position: relative;
+    background: #fff;
+    .sub-title{
+        text-align: left;
+        .icon-jiantou{
+            right:40rpx;
+        }
+    }
+     .textarea{
+      height: 140rpx;
+      width:100%;
+      background: #fff;
+      padding:20rpx 40rpx;
+      font-size:28rpx;
+      border-top:1rpx solid #f1f1f1;
+
+    }
+  }
+  .input-row{
+      position: relative;
+      width:100%;
+
+  }
+   .icon-jiantou{
+    position: absolute;
+    right:0px;
+    top:-1px;
+    font-size:20px;
+  }
+.iconfont.icon-xuanzhong{
+    font-size:24px;
+    color:@btn-primary-color;
+    &.unchecked{
+      color:@text-grey
+    }
+  }
+  .section-title{
+    font-size:14px;
+    color:#000
+  }
+.rules{
+    margin:50rpx 0px 10px 0px;
+}
+.media-view{
+  -webkit-display:flex;
+  display:flex;
+flex-wrap:wrap;
+  padding:20rpx 40rpx}
+.add{
+    width: 100rpx;
+    height: 100rpx;
+    border-radius:12rpx;
+    margin-top:20rpx;
+    border:1rpx solid rgba(217,217,217,1);
+    text-align: center;
+    font-size:20rpx;
+    color:#5f5f5f;
+    .iconfont{
+        margin-top:20rpx;
+    }
+    .icon-htmal5icon13{
+        font-size:40rpx;
+        margin-top:10rpx;
+
+    }
+            }
+.photo-wrap{
+      position: relative;
+      display:inline-block;
+      padding:18rpx 26rpx 18rpx 0;
+      .icon-shanchuguanbicha2{
+        position: absolute;
+        bottom:0;
+        right:1rpx;
+        top:0rpx;
+        color:#666;
+      }
+  }
+.btn-large{
+  display:block;
+  margin:10rx auto 0rpx auto;
+}
+</style>
+<template>
+<view style="padding-bottom:80rpx;">
+    <image style="width:100%;height:350rpx;display:block;" mode="scaleToFill" src="/images/notice/top_img@2x.png"></image>
+    <form bindsubmit="createNew" report-submit='true'>
+      <view class="form-section">
+        <view class="section ">
+            <input name="Title"  class="input-row" placeholder="输入标题"  bindinput="inputTitleFunc"/>
+        </view>
+        <view class="section ">
+             <textarea class="textarea" bindblur="bindTextAreaBlur" maxlength="-1"  placeholder="输入内容" cursor-spacing='100'/>
+              <view class="media-view">
+                 <view class="photo-wrap" wx:for="{{ImagesList}}"  @tap="deleteImg" data-url="{{index}}"><text class="iconfont icon-shanchuguanbicha2"></text><image src="{{item}}" mode="scaleToFill"  style="width:118rpx;height:118rpx;"></image>
+                 <canvas style="width: {{cw}}px; height: {{ch}}px;margin:-2000rpx;" canvas-id="canvasBg{{index}}"></canvas></view>
+                 <view class="add"  @tap="uploadCodeImg" wx:if="{{ImagesList.length!=8}}">
+                     <view class="iconfont icon-xiangji"></view>
+                     <view>上传照片</view>
+                 </view>
+                
+             </view>
+        </view>
+          <view class="section flex-form input-row">
+            <view class="section-title">设置活动/会议提醒时间</view>
+            <view >
+                <view class=" iconfont  {{Remind.checked?'icon-xuanzhong':'icon-circle'}}" @tap="checkRadio"  data-checked="{{Remind.checked}}"></view>
+
+            </view>
+          </view>
+          <view class="input-row flex-form" wx:if="{{Remind.checked}}">
+            <view class="section-title">提醒日期</view>
+             <view style="width:50%;height:100%">
+                <picker
+                style="width:100%;height:100%"
+                mode="date"
+                value="{{RemindDate}}"
+                start="new Date()"
+                end="2030-11-30"
+                bindchange="bindDateChange">
+                    <view class="label-right-text">{{RemindDate}}</view>
+                    <view class=" iconfont icon-jiantou"></view>
+                </picker>
+              </view>
+          </view>
+       <view class="input-row flex-form" wx:if="{{Remind.checked}}">
+         <view class="section-title">提醒时间</view>
+         <view style="width:50%;height:100%">
+            <picker
+            style="width:100%;height:100%"
+            mode="time"
+            value="{{RemindTime}}"
+            start="00:00"
+            name="RemindTime"
+            end="23:59"
+            bindchange="bindTimeChange">
+                <view class="label-right-text">{{RemindTime}}</view>
+                <view class=" iconfont icon-jiantou"></view>
+            </picker>
+          </view>
+      </view>
+
+      <view class="form-section  ">
+        <view class="section flex-form input-row" >
+          <view class="section-title">更改署名</view>
+           <view class="input-row-right">
+              <input name="Name" bindinput='inputName' class="input-row" placeholder="输入署名" />
+          </view>
+        </view>
+      </view>
+       
+      </view>
+      <text class="sub-text rules">确认即表示已同意《微信公众平台服务协议》</text>
+      <button class="btn-large" form-type="submit">保存</button>
+    </form>
+</view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+   import Auth from '../utils/auth'
+  import Config from '../utils/config'
+  import Tips from '../utils/tip'
+  
+
+  export default class postNotice extends wepy.page {
+     config = {
+      navigationBarTitleText: '发布重要通知'
+    }
+
+   data = {
+     Title:'',
+     Context:'',
+     systemInfo:{},
+     SenderName:'',
+     Remind:{ 'checked':false},
+     ImagesList:[],
+     RemindTime:'08:00',
+     RemindDate:Config.nowDate(),
+     id:'',
+     cw:'',
+     ch:'',
+     canvasImageList:[]
+   }
+   methods = {
+     checkRadio(e){
+        this.Remind.checked = !this.Remind.checked;
+     },
+     inputName(e){
+       this.SenderName=e.detail.value
+     },
+     bindTextAreaBlur(e){
+       this.Context=e.detail.value
+     },
+     inputTitleFunc(e){
+       this.Title=e.detail.value
+     },
+      bindTimeChange(e){
+        this.RemindTime=e.detail.value
+      },
+      bindDateChange(e){
+        this.RemindDate=e.detail.value
+      },
+      uploadCodeImg(){
+        const that=this;
+        Tips.chooseImage('8', ['album', 'camera']).then((result)=>{
+          result.tempFilePaths.forEach((item,index)=>{
+            that.ImagesList.push(item);
+            this.$apply();
+            Auth.getImageInfo(item).then(res=>{
+                let originWidth, originHeight;
+                originWidth = res.width;
+                originHeight = res.height;
+                let targetWidth= originWidth,
+                targetHeight = originHeight;
+                let ratio=originWidth/originHeight;
+                let windowWidth=this.systemInfo.screenWidth*0.9;
+                let windowHeight=this.systemInfo.screenHeight*0.9;
+                if (windowWidth<originWidth) {
+                  targetWidth = windowWidth;
+                  let scale=targetWidth/originWidth;
+                   ratio<1?targetHeight = Math.floor(originHeight*scale):targetHeight = Math.floor(originHeight*scale);
+                }else if(windowHeight<originHeight){
+                   targetHeight = windowHeight;
+                   let scale=targetHeight/originHeight;
+                   ratio<1?targetWidth = Math.floor(targetWidth*scale):targetWidth = Math.floor(targetWidth*scale);
+                  
+                }
+                this.cw=targetWidth;
+                this.ch=targetHeight;
+                 //尝试压缩文件，创建 canvas
+                let ctx = wx.createCanvasContext('canvasBg'+index);
+                ctx.drawImage(res.path, 0, 0, targetWidth, targetHeight);
+                wx.showLoading({title:"压缩中..."})
+                this.$apply();
+                ctx.draw(false,()=>{
+                  Auth.drawImage({
+                  canvasId: 'canvasBg'+index,
+                  quality:0.7,
+                  width:targetWidth,
+                  height:targetHeight,
+                  destWidth: targetWidth,
+                  destHeight: targetHeight
+                }, this).then(({ tempFilePath }) => {
+                  console.log(JSON.stringify(tempFilePath))
+                  that.canvasImageList.push(tempFilePath);
+                  this.$apply()
+                  wx.hideLoading()
+                })
+              })
+            })
+          })
+        })   
+      },
+      deleteImg(e){
+        this.ImagesList.splice(e.currentTarget.dataset.url,1);
+        this.canvasImageList.splice(e.currentTarget.dataset.url,1);
+        this.$apply()
+      },
+     async createNew(e){  
+       let value=e.detail.value;
+        if(value.Title==''){
+         Tips.toast("请输入通知标题",'none');
+         return false;
+       }
+      
+       if(this.Context==''){
+         Tips.toast("请输入通知内容",'none');
+         return false;
+       }
+      
+      let url='notice/create?OpenID='+Auth.getConfig('openId')+'&GroupID='+this.id;
+  
+       let params={
+          'Title':this.Title,
+          'Context':this.Context,
+          'SenderName':this.SenderName,
+          'Remind':this.Remind.checked,
+          'RemindTime':this.RemindDate+' '+this.RemindTime
+       };
+       let signID = await Config.createNotice(params,url);
+       if(this.ImagesList.length>0){
+        let result = await Auth.submitFiles(this.id,this.canvasImageList,'img',signID,'notice');
+       }
+       Tips.toast('新建成功');
+      setTimeout(()=>{ 
+        Auth.backOpener({  
+            'optionId':this.id
+        })
+      },600)
+     }
+   }
+  onLoad(option){
+    this.SenderName=JSON.parse(Auth.getConfig('userInfo')).nickName;
+     wepy.getSystemInfo().then(res=>{
+      this.systemInfo=res
+    });
+    this.id=option.id
+  }
+}
+</script>

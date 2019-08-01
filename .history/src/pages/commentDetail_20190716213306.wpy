@@ -1,0 +1,298 @@
+<style lang="less" scoped>
+@btn-primary-color:#FF6F61;
+.view-bottom{
+    background: #F7F7F7;
+    border-bottom:1rpx solid #e2e2e2;
+    .top-content{
+        border-bottom:1rpx solid #e2e2e2;
+        padding:35rpx 40rpx;
+        color:#000;
+        font-size:24rpx;
+    }
+   .moment-list{
+       padding: 0px 0px 20rpx 58rpx ;
+       .comments-list{
+           background:rgba(234,234,234,1);
+            font-size:20rpx;
+            font-weight:400;
+            .comments-list-item{
+                padding: 0px 16rpx
+            }
+       }
+       .flex-form.audio-list{
+           justify-content:inherit
+       }
+       .audios{
+            height:80rpx;
+            width:30%;
+            margin-right:3%;
+             line-height: 80rpx;
+            background:@btn-primary-color;
+            border-radius:12rpx;
+             color:#fff;
+             margin-bottom:8rpx;
+             position: relative;
+             :last-child{
+                 margin-right:0
+             }
+            .iconfont{
+                position: absolute;
+                left:18rpx;
+            }
+            .text{
+                position: absolute;
+                left:59rpx;
+                font-size: 24rpx;
+            }
+        }
+   }
+    .middle-content{
+       color: #505050;
+       padding:0px 40rpx 40rpx 40rpx;
+       line-height: 40rpx;
+       font-size:12px;
+       >.flex-form{
+           padding-top:14rpx;
+           border-top:1rpx solid #efefef;
+       }
+       .flex-form.img-list{
+           flex-wrap: wrap;
+       }
+       .content-text{
+           line-height: 34rpx;
+           padding-bottom:16rpx;
+       }
+        .img-wrap{
+            display:inline-block;
+            margin-right:10rpx;
+        }
+        .icon-Group-{
+            color:#000;
+            font-size:40rpx;
+        }
+       .btn-text{
+           font-size:20rpx;
+           vertical-align:middle;
+           padding-left:6rpx;
+       }
+       .icon-views{
+        //    padding:20rpx 0px;
+           .iconfont{
+               color:#808080;
+               font-size:24rpx;
+               display: inline-block;
+               vertical-align: middle;
+               &.icon-liuyan{
+                   font-size:44rpx;
+               }
+               &.icon-star{
+                   font-size:38rpx
+               }
+               &.icon-aixin{
+                   font-size:35rpx
+               }
+               &.icon-aixin.favorite{
+                  color:@btn-primary-color
+               }
+           }
+       }
+       .img-item{
+           margin-bottom:12rpx;
+           flex:1;
+           height: 190rpx;
+           min-width:165rpx;
+            margin-right:10rpx;
+           &:nth-child(3n),&:last-child{
+               margin-right:0px
+           }
+           &.first-child{
+              flex-basis:100%
+           }
+       }     
+       .btn-items{
+           padding-right:30rpx
+       }
+    }
+}
+</style>
+<template>
+<view style="height:100%;padding:20rpx 30rpx;">
+<Comments 
+  :content.sync="groupInfo" 
+  :showTop="showTop"
+  :commentsBtnList.sync="commentsBtnList" 
+ @favoriteFunc.user="favoriteFunc"
+  @listBtnClickFunc.user="listBtnClickFunc"
+   @deleteItem.user="deleteMsg"
+  @deleteMsgFunc.user="deleteMsgFunc"
+     @previewImg.user="previewImg"
+     @audioPlay.user="audioPlay"
+     >
+  </Comments> 
+   <deleteModel
+      :modalshow.sync="deleteModalShow"
+          righttext="确定"
+          lefttext="取消"
+          modaltitle="提示"
+          modalStyle="bottom:35%;top:35%;"
+          @confirmFunc.user="deleteMsg">
+          <view slot="content" class="content-list">
+              <view class="sub-title">删除签到无法恢复，确认删除？</view>
+          </view>
+  </deleteModel>
+</view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Comments from '../components/commets'
+  import modal from '../components/modal'
+  import Config from '../utils/config'
+  import Auth from '../utils/auth'
+  import Tips from '../utils/tip'
+  
+  export default class commentDetail extends wepy.page {
+     config = {
+      navigationBarTitleText: '评论详情'
+    }
+
+    components = {
+      Comments:Comments,
+      deleteModel:modal
+    }
+
+   data = {
+    deleteModalShow:false,
+    groupInfo:{},
+    optionId:'',
+    bgImg:'',
+    date:'',
+    showTop:false,
+    showDelete:false,
+    userSetting:'',
+    groupTitle:'',
+     commentsBtnList:[{
+      'icon':'icon-liuyan',
+      'text':'评论',
+        'url':'./postCommet'
+     },{
+      'icon':'icon-zhuanfa',
+      'text':'分享',
+        'url':'./shareImage',
+       'favorite':false
+     },{
+      'icon':'icon-shanchu',
+      'text':'删除',
+        'url':''
+     }]
+   }
+   methods = {
+    previewImg(e){
+      let url=e.currentTarget.dataset.url;
+      let id=e.currentTarget.dataset.id;
+      wx.previewImage({
+        current: url, // 当前显示图片的http链接
+        urls: this.groupInfo[id].ImagesList// 需要预览的图片http链接列表
+      })
+    },
+     listBtnClickFunc(id){
+    
+        if(this.commentsBtnList[id.id].url!=''){
+          this.$root.$navigate(this.commentsBtnList[id.id].url+'?msg='+JSON.stringify(id.msg)+'&userInfo='+JSON.stringify(this.userSetting)+"&type=1&groupInfo="+JSON.stringify(this.groupInfo)+"&id="+this.optionId+'&bgImg='+this.bgImg+'&name='+this.groupInfo.NickName+'&title='+this.groupTitle+'&date='+this.date);
+        }else{
+          this.deleteModalShow=true;
+        }
+    }, 
+    async favoriteFunc(e){
+        let result = await Config.praise('?OpenID='+Auth.getConfig('openId')+'&GroupID='+this.optionId+'&SignID='+e.id);
+        if(result){
+          if( this.groupInfo.IsPraised==false){
+            this.groupInfo.PraisedTimes+=1;
+            this.groupInfo.IsPraised=true;
+              this.$apply()
+            
+          }else{
+            this.groupInfo.PraisedTimes-=1;
+            this.groupInfo.IsPraised=false;
+              this.$apply()
+          }
+          this.$broadcast('favoriteChange',this.groupInfo.IsPraised)
+        
+        }
+    },
+  
+    async deleteMsg(){
+      await Config.deleteMessage('?SignID='+this.groupInfo.SignID+'&GroupID='+this.optionId+'&OpenID='+this.groupInfo.OpenID+'&AdminOpenID='+Auth.getConfig('openId'));
+      this.$apply();
+      this.groupInfo={};
+      this.deleteModalShow=false;
+      Tips.toast('删除成功');
+       Auth.backOpener({'pageRoute':'commentDetail'})
+    },
+    async deleteMsgFunc(msg){//删除评论回复
+      let type=msg.type;
+      if(type=='1'){//回复
+        this.$navigate('./postCommet?id='+this.optionId+'&type=2&msg='+JSON.stringify(msg.msgId)+"&groupInfo="+JSON.stringify(this.groupInfo))
+      }else if(type=='2'){//删除
+       let res=await Config.deleteMessage('?SignID='+msg.signId+'&GroupID='+this.optionId+'&OpenID='+msg.openId+'&messageID='+msg.msgId.MessageID+'&AdminOpenID='+Auth.getConfig('openId'));
+        Tips.toast('删除成功');
+        this.groupInfo['Messages'].splice(this.groupInfo['Messages'].findIndex(sbitem=>sbitem.MessageID==msg.msgId.MessageID),1);
+        this.$apply();
+      }
+    },
+    audioPlay(e){
+       const eId=e.currentTarget.dataset.id;
+       const innerAudioContext = wepy.createInnerAudioContext();
+      innerAudioContext.autoplay = false;
+      innerAudioContext.src = e.url;
+      innerAudioContext.play();
+      innerAudioContext.onPlay(() => {
+        this.groupInfo.SoundRecordingsList.forEach((sbItem)=>{
+            sbItem.animation='';
+        })
+        this.groupInfo.SoundRecordingsList[e.index].animation='animation';
+        this.$apply()
+      })
+      innerAudioContext.onError((res) => {
+          console.log(res.errMsg)
+      });
+      this.innerAudioContext.onEnded((res) => {
+        console.log('结束播放');
+        this.groupInfo.SoundRecordingsList[e.index].animation=''
+        this.$apply()
+      });
+    }
+   }
+    onShow(){
+      let pages = getCurrentPages();
+      let currPage = pages[pages.length - 1];
+      let prevPage = pages[pages.length - 2];
+      if(Object.keys(currPage.data.params).length){
+        this.groupInfo=currPage.data.params.groupInfo;
+      }
+    }
+    onLoad(option){
+      this.groupInfo=JSON.parse(option.groupInfo);
+      this.groupInfo.showMore=false;
+      let isManager=option.isManager;
+      if(isManager=='false'&&this.groupInfo.OpenID!=Auth.getConfig('openId')){
+        this.commentsBtnList=[{
+          'icon':'icon-liuyan',
+          'text':'评论',
+            'url':'./postCommet'
+         },{
+          'icon':'icon-zhuanfa',
+          'text':'分享',
+            'url':'./shareImage',
+           'favorite':false
+         }];
+      };
+      this.bgImg=option.bgImg;
+      this.groupTitle=option.title;
+      this.optionId=option.id;
+      this.userSetting=JSON.parse(option.userInfo);
+      this.date=option.date;
+      parseInt(this.groupInfo.PraiseTimes)>999?this.groupInfo.PraiseTimes='999+':this.groupInfo.PraiseTimes=this.groupInfo.PraiseTimes;
+   }
+  }
+</script>

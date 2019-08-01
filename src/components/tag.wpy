@@ -15,25 +15,28 @@
  }
 </style>
 <template>
-        <button wx:for="{{list}}" class="btn-mini {{item.checked?'':'btn-outline'}}" data-text="{{item.text}}"  @tap="chooseItems" data-key="{{index}}" wx:key="index">{{item.text}}</button>
+        <button wx:for="{{list}}" class="btn-mini {{item.checked?'':'btn-outline'}}" data-text="{{item.PropertyDescription}}"  @tap="chooseItems" data-key="{{index}}" wx:key="index">{{item.PropertyDescription}}</button>
 </template>
 <script>
 import wepy from 'wepy'
 export default class tagBtn extends wepy.component{
  
     props = {
-        list:{}
+        list:[]
     }
 
     methods  = {
         chooseItems(e){
             const index=e.currentTarget.dataset.key;
             const text=e.currentTarget.dataset.text;
-            this.list[index].checked = !this.list[index].checked;
+            if(text!='姓名'){
+                this.list[index].checked = !this.list[index].checked;
+            }
             const ifChecked = this.list[index].checked;
-            this.$emit('changeBtnStatus', {'text':text,'ifChecked':ifChecked})
+            this.$emit('changeBtnStatus', {'PropertyDescription':text,'checked':ifChecked})
         }
     }
+
     
 }
 </script>

@@ -1,0 +1,299 @@
+<style lang="less" scoped>
+@btn-primary-color:#FF6F61;
+.form-section{
+  position: relative;
+  .picker{
+   position: relative
+  }
+  .section{
+    position: relative;
+  }
+  .sub-title{
+    padding:25rpx 0 25rpx 40rpx;
+    text-align: left;
+  }
+ 
+
+  .icon-jiantou3{
+    position: absolute;
+    right:40rpx;
+    top:18rpx;
+    font-size:22px;
+    color:#4E4E4E
+  }
+}
+.radio-group{
+  padding:0 14rpx;
+  background: #fff;
+  .radio{
+    display: block;
+    height: 80rpx;
+    line-height: 80rpx;
+    font-size: 50rpx;
+    color:#808080;
+    radio{
+      -webkit-transform:scale(0.6);
+      transform:scale(0.6);
+    }
+  }
+}
+ .sub-title.rules{
+    margin-top:40rpx;
+    font-size: 11px;
+  }
+.btn-large{
+  margin:-10rpx auto 60rpx auto
+}
+.list-item{
+  color:#666;
+  line-height:42rpx;
+}
+</style>
+<template>
+<view style="height:100%">
+   <form bindsubmit="ensure" report-submit='true'>
+    <view class="form-section" >
+      
+       <view class="section " wx:if="{{BMI>0&&height==false}}">
+          <view class="sub-title">身高(单位：米)</view>
+            <input class="input-row" data-name="Height" placeholder="请输入身高(m)" bindinput='heightinput'></input>
+        </view>
+        <view class="section "  wx:if="{{BMI>0&&weight==false}}">
+          <view class="sub-title">体重(单位：公斤)</view>
+            <input class="input-row" data-name="Weight" placeholder="请输入体重(kg)" bindinput='weightinput'></input>
+        </view>
+      <block wx:for="{{Properties}}">
+        
+        <view class="section " wx:if="{{item.Type=='1'&&item.PropertyName!='Weight'&&item.PropertyName!='Height'&&item.PropertyName!='Phone'}}">
+          <view class="sub-title">{{item.PropertyDescription}}</view>
+            <input class="input-row" data-name="{{item.PropertyName}}" placeholder="请输入{{item.PropertyDescription}}" bindinput='itemInput'></input>
+        </view>
+        <view class="section " wx:if="{{item.PropertyName=='Height'}}">
+          <view class="sub-title">身高</view>
+            <input class="input-row" type="digit" placeholder="请输入身高(m)" bindinput='heightinput'></input>
+        </view>
+        <view class="section " wx:if="{{item.PropertyName=='Weight'}}">
+          <view class="sub-title">体重</view>
+            <input class="input-row" type="digit" placeholder="请输入体重(kg)" bindinput='weightinput'></input>
+        </view>
+        <view class="section " wx:if="{{item.PropertyName=='Phone'}}">
+          <view class="sub-title">手机号</view>
+            <input class="input-row" type="telephone" placeholder="请输入手机号码" bindinput='phoneinput'></input>
+        </view>
+        <view class="section "  wx:if="{{item.Type=='2'||item.Type=='3'}}">
+          <view class="sub-title">{{item.PropertyDescription}}</view>
+          <radio-group class="radio-group" @change="checkRadio"  >
+            <label class="radio " @tap="itemTap" data-name="{{item.PropertyName}}" wx:for="{{item.Items}}" wx:for-item="subitem" >
+             <radio checked="{{subitem.checked}}" color="#FF6F61" value="{{subitem.value}}">{{subitem.name}}</radio>
+            </label>
+          </radio-group>
+        </view>
+        <view class="section" wx:if="{{item.Type=='4'}}">
+          <checkbox-group @change="checkboxChange">
+            <label class="checkbox" wx:for="{{item.Items}}" wx:for-item="subitem" data-name="{{item.PropertyName}}" @tap="itemTap">
+              <checkbox value="{{subitem.value}}" color="#FF6F61" checked="{{subitem.checked}}" />
+              {{subitem.name}}
+            </label>
+          </checkbox-group>
+        </view>
+      </block>
+       <!-- <view class="section " wx:if="{{BMI>0}}">
+          <view class="sub-title">BMI值</view>
+            <input class="input-row" type="digit" placeholder="请输入BMI值" bindinput='BMIinput'></input>
+        </view> -->
+    </view>
+          
+    <text class="sub-title rules">确认即表示已同意《微信公众平台服务协议》</text>
+    <button class="btn-large" form-type="submit">确认</button>
+  </form>
+  <sucessModal 
+    modaltitle="参与成功"
+    lefttext="取消"
+    :modalshow.sync="sucessModalShow"
+    righttext="确定"
+     modalStyle="bottom:35%;top:35%;"
+    @confirmFunc.user="sucessModalConfirm" >
+    <view slot="content" class="content-list">
+      <view class="list-item" >*签到日期:{{date}} </view>
+      <view  class="list-item" >*每日可签到时间:{{time}}</view>
+      <view  class="list-item" >*签到 规则:{{!rules||rules=='undefined'?'暂无':rules}}</view>
+      <view  class="list-item" >*以上规则解释权归发起人所有</view>
+    </view>
+    </sucessModal>
+    </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Auth from '../utils/auth'
+  import Validate from '../utils/Validate'
+  import Config from '../utils/config'
+  import Tips from '../utils/tip'
+  import modal from '../components/modal'
+
+  export default class writeSignInfo extends wepy.page {
+      config = {
+        navigationBarTitleText: '填写报名信息',
+    }
+    components = {
+      sucessModal:modal
+    }
+   data = {
+     optionId:'',
+     params:{},
+     date:'',
+     time:'',
+     weight:false,
+     height:false,
+     phone:false,
+     age:false,
+     BMI:'',
+     rules:'',
+     currentValue:'',
+     sucessModalShow:false,
+     Properties:[],
+   }
+   methods = {
+     itemInput(e){
+      let name=e.currentTarget.dataset.name;
+      this.params[name]=e.detail.value;
+       
+     },
+    
+     heightinput(e){
+      this.params['Height']=parseFloat(e.detail.value);
+     },
+     phoneinput(e){
+      this.params['Phone']=e.detail.value;
+     },
+     weightinput(e){
+      this.params['Weight']=parseFloat(e.detail.value);
+     },
+     itemTap(e){
+        this.params[e.currentTarget.dataset.name]=this.currentValue;
+     },
+     checkRadio(e){
+       this.currentValue =parseInt(e.detail.value) 
+     },
+      checkboxChange(e) {
+        this.params[this.currentName] = parseInt(e.detail.value)
+      },
+      sucessModalConfirm(e) {
+        this.sucessModalShow=false;
+         let pages = getCurrentPages();
+        let prevPage = pages[pages.length - 2]; 
+        setTimeout(()=>{
+          Auth.backOpener({},()=>{
+             prevPage.initData();
+          })
+        },500)
+
+        
+      }
+   }
+    // validate(){
+    //   let reg =/^[+]?[0-9]*\d(\.\d+)?$/;
+    //   for(var i in this.data.params){
+    //     let value=this.data.params[i];
+    //     console.log(value)
+    //     if(Validate.optional(value)){
+    //       Tips.toast('报名信息不支持为空','none');
+    //       return false
+    //     }else if(this.data.params['BMI']&&this.BMI>0&&!reg.test(this.params.BMI)){
+    //       Tips.toast('BMI值需要为数字','none');
+    //       return false
+    //     }else if(this.height==true&&!reg.test(this.params.Height)){
+    //       Tips.toast('身高需要为数字','none');
+    //       return false
+    //     }else if(this.weight==true&&!reg.test(this.params.Weight)){
+    //       Tips.toast('体重需要为数字','none');
+    //       return false
+    //     }else if(this.age==true&&!reg.test(this.params.Age)){
+    //       Tips.toast('年龄需要为数字','none');
+    //       return false
+    //     }else if(this.phone==true&&!Validate.tel(this.params.Phone)){
+    //       Tips.toast('请输入正确的手机号','none');
+    //       return false
+    //     }else{
+    //      return true
+    //    }
+    //   }
+    // } 
+    async ensure(event){
+      let reg =/^[+]?[0-9]*\d(\.\d+)?$/;
+      for(var i in this.data.params){
+        let value=this.data.params[i];
+        console.log(!reg.test(this.params.Height))
+        if(Validate.optional(value)){
+          Tips.toast('报名信息不支持为空','none');
+          return false
+        }else if(this.height==true&&!reg.test(this.params.Height)){
+          Tips.toast('身高需要为数字','none');
+          return false
+        }else if(this.weight==true&&!reg.test(this.params.Weight)){
+          Tips.toast('体重需要为数字','none');
+          return false
+        }else if(this.age==true&&!reg.test(this.params.Age)){
+          Tips.toast('年龄需要为数字','none');
+          return false
+        }else if(this.phone==true&&!Validate.tel(this.params.Phone)){
+          Tips.toast('请输入正确的手机号','none');
+          return false
+        }
+      }
+      let params={
+        'OpenID':Auth.getConfig('openId'),
+        'avatarUrl':JSON.parse(Auth.getConfig('userInfo')).avatarUrl,
+        'NickName':JSON.parse(Auth.getConfig('userInfo')).nickName
+      };
+       let newParams = Object.assign({},params,this.params);
+       let res=await Config.inGroup(this.optionId,newParams);
+       if(res){
+         this.sucessModalShow=true;
+         this.$apply();
+       }else{
+         Tips.toast(res,"none")
+       }
+    }
+    onLoad(option){
+      this.optionId=option.id;
+      this.date=option.date;
+      this.time=option.time;
+      this.BMI=parseFloat(option.BMI);
+      this.rules=option.rules;
+      this.Properties=JSON.parse(option.Properties);
+      this.Properties.forEach((item)=>{
+        this.params[item.PropertyName]='';
+        if(item.Type!='1'){
+          let arrObj=[];
+          if(item.Items!=null){
+
+            item.Items.split(',').forEach((subItem)=>{
+              let obj={};
+               obj.value=subItem.substr(0,1);
+               obj.name=subItem.substr(2);
+               obj['checked']=false;
+               arrObj.push(obj);
+            })
+           item.Items=arrObj;
+          }
+        }else{
+          if(item.PropertyName=='Height'){
+            this.height=true;
+            item.PropertyDescription='身高(单位：米)';
+          } 
+          if(item.PropertyName=='Weight'){
+            this.weight=true;
+            item.PropertyDescription='体重(单位：公斤)';
+          } 
+          if(item.PropertyName=='Age'){
+            this.age=true;
+          }
+          if(item.PropertyName=='Phone'){
+            this.phone=true;
+          }
+        }
+      })
+    }
+  }
+</script>

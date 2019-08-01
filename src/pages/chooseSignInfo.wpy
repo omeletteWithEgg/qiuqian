@@ -1,20 +1,23 @@
-<style lang="less">
-@import "../style/app.less";
+<style lang="less" scoped>
+@btn-primary-color:#FF6F61;
 .form-section{
   .section{
     position: relative;
     &.input-row{
-        padding:0 20px 0 10px;
-        line-height: 37px
+        padding:20rpx 40rpx 20rpx 20rpx;
+        height:auto;
+        line-height: 50rpx;
+
     }
     .btn-mini{
-    width:42px;
-    height:18px;
-    padding:0px;
-    line-height: 16px;
+    width:auto;
+    padding:0rpx 14rpx;
     display: inline-block;
     border-radius: 12px;
-    margin-left:10px;
+    border:0rpx;
+    height:18px;
+    line-height: 16px;
+    margin-left:20rpx;
     &.btn-outline{
       background: #fff;
       border:1px solid #707070;
@@ -47,7 +50,7 @@
       font-size:14px;
       &.rules{
           text-align: center;
-          padding: 24px 0 18px 0;
+          padding: 24px 0rpx 18px 0rpx;
           font-size: 12px;
       }
   }
@@ -61,7 +64,7 @@
       <view class="form-section  ">
           <view class="section input-row">
             <view>
-              <button  wx:for="{{choosedItems}}" class="btn-mini " wx:key="{{index}}" >{{item.text}}</button>
+              <button  wx:for="{{choosedItems}}" class="btn-mini " wx:key="{{index}}" >{{item.PropertyDescription?item.PropertyDescription:item}}</button>
             </view>
           </view>
          
@@ -70,10 +73,9 @@
          <view class="form-section  ">
           <view class="section input-row">
             <view >
-                <tagBtn :list="tagList"  @changeBtnStatus.user="changeBtnStatus"></tagBtn>
+                <tagBtn :list.sync="tagList"  @changeBtnStatus.user="changeBtnStatus"></tagBtn>
             </view>
           </view>
-         
         </view>
       <text class="sub-title rules">确认即表示已同意《微信公众平台服务协议》</text>
        <button class="btn-large" @tap="ensureFunc">确认</button>
@@ -83,7 +85,9 @@
 <script>
   import wepy from 'wepy'
   import tagBtn from '../components/tag'
-  
+   import Auth from '../utils/auth'
+  import Config from '../utils/config'
+  import Tips from '../utils/tip'
 
   export default class addNewSign extends wepy.page {
      config = {
@@ -95,41 +99,59 @@
     }
 
    data = {
-    choosedItems:[
-         {'text':'姓名'},
-         {'text':'性别'}
-    ],
-    tagList:[
-          {'text':'姓名'},
-          {'text':'公司'},
-         {'text':'性别'}
-    ]
+    choosedItems:[],
+    tagList:[]
    }
 
-   events = {
-     
-   }
    methods = {
        changeBtnStatus(msg){
-           if(msg.ifChecked===true){
-             this.choosedItems.push(msg)
+         if(msg.PropertyDescription=='姓名'){
+           Tips.toast('姓名为必填项且不可编辑','none');
+           return
+           }
+           else if(msg.checked===true){
+              this.tagList.forEach((item,index)=>{
+                if(item.PropertyDescription==msg.PropertyDescription){
+                  this.choosedItems.push(item);
+                }
+              })
            }else{
-             this.choosedItems.forEach((item,index)=>{
-               if(item.text==msg.text){
-                 this.choosedItems.splice(index,1)
-               }
-             })
+             this.choosedItems.splice(this.choosedItems.findIndex(item=>item.PropertyDescription==msg.PropertyDescription),1)
            }
        },
+    
        ensureFunc(){
-         console.log(this.choosedItems)
-         const pageData = [];
-         this.choosedItems.forEach((item)=>{
-           pageData.push(item.text)
-         });
-          this.$navigate('./addNewSign',pageData)
+          Auth.backOpener({'Properties':{
+            'Properties':this.choosedItems
+          }});
        }
    }
-  //.2',
+
+  async onLoad(option){
+     let res = await Config.userProperties();
+      this.tagList=res.Properties;
+      this.tagList.forEach((item)=>{
+        if(item.PropertyDescription=='姓名'){
+          Object.assign(item,{'checked':true});
+          this.choosedItems.length==0?this.choosedItems.push(item):''
+        }else{
+          Object.assign(item,{'checked':false})
+        }
+      })
+        let arr=JSON.parse(option.Properties).Properties;
+      if(arr!=null){
+        arr.forEach((item)=>{
+          if(item.PropertyDescription!='姓名'){
+            this.choosedItems.push(item);
+          }
+          this.tagList.forEach((subItem)=>{
+              if(item.PropertyDescription==subItem.PropertyDescription){
+                  subItem.checked=true
+              }
+            })
+          }) 
+      }
+    this.$apply();
+   }
   }
 </script>

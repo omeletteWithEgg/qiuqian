@@ -1,0 +1,255 @@
+<style lang="less" scoped>
+    // @import "../style/app.less";
+    .container-share{
+        position:relative;
+        margin:0rpx 40rpx 40rpx 40rpx;
+        border-radius:12rpx 12rpx 0 0 ;
+        padding:30rpx 20rpx;
+        height:880rpx;
+        background:#fff;
+        .canvas{
+            width:100%;
+            height:100%;
+        }
+       
+    }
+    .top-view{
+        padding: 28rpx 40rpx;
+        .sub-title{
+            padding-bottom: 0px;
+        }
+    }
+    
+    .user-info-container{
+        position: absolute;
+        bottom:0rpx;
+        left: 30rpx;
+        right:30rpx;
+    }
+    .user-info{
+        padding-bottom:40rpx;
+        border-bottom:1rpx solid rgba(240,240,240,1);
+        text-align: center;
+        line-height: 40rpx;
+        .user{
+            color:#505050;
+            padding:10rpx 0;
+        }
+        .date{
+            font-size:12px;
+            color:#9F9F9F
+        }
+    }
+    .share-content{
+        align-items:stretch;
+        padding-top:40rpx;
+        .share-text{
+            color:#505050;
+            font-size:14px;
+            >text{
+                display: block;
+                position: relative;
+                &.tip-text{
+                    position: absolute;
+                    bottom:0rpx;
+                }
+            }
+           
+        }
+    }
+
+        
+</style>
+<template>
+    <view style="height:100%">
+        <view class="flex-form top-view">
+            <view class="btn-round disabled" @tap="back">返回</view>
+            <!-- <view class="sub-title" @tap="changeBg">换一换</view> -->
+            <view class="btn-round" @tap="download">保存</view>
+        </view>
+        <view class="container-share">
+            <canvas class="canvas" canvas-id="canvasBg" >
+               
+            </canvas>
+        </view>
+        <view class="sub-title">如生成分享图失败，请返回刷新或多试几次~</view>
+
+    </view>
+</template>
+<script>
+ import wepy from 'wepy';
+  import Auth from '../utils/auth'
+  import Config from '../utils/config'
+
+  export default class shareImage extends wepy.page {
+     config = {
+      navigationBarTitleText: '保存图片分享'
+    }
+    
+
+    data={
+        userName:JSON.parse(Auth.getConfig('userInfo')).nickName,
+        pageData:{},
+        type:'',
+        bgSrc:'',
+        shareTitle:'',
+        userImg:JSON.parse(Auth.getConfig('userInfo')).avatarUrl,
+        QRcodeImg:''
+    }
+
+    methods={
+        download () {
+            this.getAlbumScope()
+            // 导出图片
+            Auth.saveImage(this.bgSrc);
+        },
+        back(){
+            wx.navigateBack({
+                 delta: 1
+            })
+        },
+
+    }
+    createRpx2px() {
+      const { windowWidth } = wx.getSystemInfoSync()
+
+      return function(rpx) {
+        return windowWidth / 750 * rpx
+      }
+    }
+
+
+    drawCanvas(){
+        // 获取头像图像信息 
+        const that=this;
+        const avatar = this.userImg;
+        const bgImage = this.bgSrc;
+        const shareTitle = this.shareTitle;
+        const avatarPromise = Auth.getImageInfo(avatar)
+        const codePromise = Auth.getImageInfo(this.QRcodeImg)
+ 
+        // 获取背景图像信息
+        const backgroundPromise = Auth.getImageInfo(bgImage)
+        Promise.all([avatarPromise,backgroundPromise,codePromise])
+          .then(([avatar,background,QRcode]) => {
+            wx.showLoading('图片生成中...')
+            console.log("avatar-------------"+JSON.stringify(avatar))
+            console.log("background-------------"+JSON.stringify(background))
+            console.log("QRcode-------------"+JSON.stringify(QRcode))
+            const rpx2px = this.createRpx2px();
+            const context = wx.createCanvasContext('canvasBg');
+            const canvasWidth = rpx2px(320 * 2);
+            const canvasHeight = rpx2px(250 * 2);
+             // 绘制背景，填充满整个canvas画布
+            //  if(that.type=='notice'){
+            //     wx.getFileSystemManager().readFile({
+            //       filePath: background.path, //选择图片返回的相对路径
+            //       encoding: 'base64', //编码格式
+            //       success: res => { //成功的回调
+            //         context.drawImage(res.data, 0, 0, canvasWidth, canvasHeight);
+            //       }
+            //     })
+
+            //  }else{
+                context.drawImage(background.path, 0, 0, canvasWidth, canvasHeight);
+            //  }
+            const avatarWidth = rpx2px(60 * 2)
+            const avatarHeight = rpx2px(60 * 2)
+            const avatarTop = rpx2px(250 * 2)
+
+            let signTimes='恭喜你已签到'+shareTitle+'次'
+             // 绘制用户名
+            context.setFontSize(rpx2px(16 * 2))
+            context.setTextAlign('center')
+            context.setFillStyle('#fff')
+            context.fillText(
+              '#'+that.pageData.title+'#',
+             canvasWidth / 2,
+              canvasHeight - rpx2px(150 * 2)
+            )
+             context.setFontSize(rpx2px(12 * 2))
+            context.fillText(
+              that.pageData.date,
+              canvasWidth / 2,
+              canvasHeight - rpx2px(130 * 2)
+            )
+            context.setFillStyle('#505050')  
+            context.fillText(
+              that.userName,
+              canvasWidth / 2,
+              avatarTop + rpx2px(55 * 2)
+            ) 
+            context.setTextAlign('left')
+            context.setFontSize(rpx2px(16 * 2))
+            context.setFillStyle('#08c')  
+            context.fillText(
+              '#'+that.pageData.title+'#',
+              rpx2px(16 * 2),
+              canvasHeight + rpx2px(130 * 2)
+            ) 
+
+            if(that.type!='notice'){
+                context.fillText(
+                  signTimes,
+                   rpx2px(15 * 2),
+                  canvasHeight +rpx2px(150 * 2)
+                )
+            } 
+            context.setFontSize(rpx2px(10 * 2))
+            context.setFillStyle('#9f9f9f')  
+            context.fillText(
+              '微信小程序：每日膳膳签',
+              rpx2px(15 * 2),
+              canvasHeight + rpx2px(180 * 2)
+            )
+            context.drawImage(QRcode.path,canvasWidth-rpx2px(110*2),canvasHeight+rpx2px(100*2),rpx2px(84*2),rpx2px(84*2))
+            context.arc(canvasWidth / 2 ,  canvasHeight , avatarWidth/2, 0, 2 * Math.PI)
+            context.clip()
+            context.drawImage(avatar.path,canvasWidth / 2 - avatarWidth / 2, avatarTop - avatarHeight / 2,avatarWidth,avatarHeight)
+           
+            // 完成作画
+            context.draw(false, () => {
+                Auth.drawImage({
+                canvasId: 'canvasBg',
+              }, this).then(({ tempFilePath }) => { this.bgSrc= tempFilePath ;wx.hideLoading()}).catch((error)=>{
+                console.log(JSON.stringify(error));wx.hideLoading()
+                })
+            })
+        }).catch((error)=>{
+            console.log(JSON.stringify(error))
+        })
+        wx.hideLoading()
+    }
+      //获取相册授权
+      getAlbumScope(){
+        wx.getSetting({
+          success(res) {
+            if (!res.authSetting['scope.writePhotosAlbum']) {
+              wx.authorize({
+              scope:'scope.writePhotosAlbum',
+              success() {
+                console.log('授权成功')
+                }
+              })
+            }
+          }
+        })
+      }
+    async onLoad(option){
+        this.pageData=option ;
+        this.bgSrc=option.bgImg ;
+        this.type=option.type ;
+        this.QRcodeImg =await Config.getWXCode(option.id);
+        let params={
+            'OpenID':Auth.getConfig("openId"),
+            'GroupID':option.id
+        }
+        if(option.type!='notice'){
+            let res=await Config.signedRecord(params);
+            this.shareTitle=res.TotalSignTimes;
+        }
+        this.drawCanvas();
+        this.$apply()
+    }
+  }
+</script>

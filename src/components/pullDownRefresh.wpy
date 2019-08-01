@@ -1,0 +1,28 @@
+<style type="less" scoped>
+  .group {padding-top:10rpx;}
+</style>
+<template>
+  <view class="group" hidden="{{ifShow}}" >
+    <text class="sub-title">{{loadText}}</text>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+
+  export default class loadMore extends wepy.component {
+    data={
+      // loadText:''
+    }
+    props = {
+      ifShow: {
+        type:Boolean,
+        default:true
+      },
+      loadText: {
+        default:'正在加载……'
+      }
+    }
+
+   
+  }
+</script>

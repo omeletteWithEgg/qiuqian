@@ -1,0 +1,194 @@
+<style lang="less" scoped>
+page>view{
+    height: 100%;
+    padding:20rpx 30rpx;
+    box-sizing:border-box;
+}
+  .container{
+    height: 100%;
+    background:#f5f5f5;
+    padding-bottom:50rpx
+  }
+  .btn-large-wrap{
+      position: fixed;
+      bottom:0px;
+      left:0px;
+      right:0px;
+      .btn-large{
+        width:100%
+      }
+  }
+ .blank-center{
+   height: 100%;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   >view{
+     width:100%;
+     margin-top:-100rpx;
+   }
+  
+ }
+  .content-list text{
+    display: block;
+    padding:20rpx 0px;
+    font-size:28rpx;
+    border-top:1rpx solid #999;
+    &:first-child{
+      border-top:0px
+    }
+  }
+  .modal{
+
+    .content-list{
+      padding:0 40rpx 20rpx 40rpx;
+      input{
+        width:60%;
+        height:72rpx;
+          text-indent:15rpx;
+          color:#000;
+          font-size:14px;
+          box-sizing:border-box;
+        display: inline-block;
+        margin-right:10rpx;
+        border:1px solid rgba(149,152,154,1);
+         border-radius: 12rpx;
+      }
+      .btn-medium{
+        line-height:72rpx;
+        border-radius: 12rpx;
+        display: inline-block;
+      }
+      .sub-title{
+        padding:40rpx 0rpx;
+      }
+    }
+  }
+</style>
+<template>
+<view>
+  <scroll-view scroll-y class="container" wx:if="{{list.length>0}}"  >
+       <repeat for="{{list}}" key="index" index="index" item="item">
+          <indexList
+          :bgImg="item.BackgroundImg"
+          :title="item.Title"
+          :id="item.NoticeID"
+          :index="index"
+          extraClass='notice-list'
+          imgheight="320rpx"
+          :enddate="item.CreateTime"
+          :righticon="item.deleteIconShow"
+          @seeDetail.user="goDetail"
+          @deleteItem.user="deleteItem"
+          ></indexList>
+       </repeat>
+       <modal modaltitle="删除通知"
+            :modalshow.sync="modalshow"
+            righttext="确定"
+            lefttext="取消"
+             modalStyle="bottom:35%;top:35%;"
+            @confirmFunc.user="confirmFunc">
+            <view slot="content" class="content-list">
+               <!--  <input type="text" value="{{valiCode}}" ></input>
+                 <button class="btn-medium">{{valiBtnText}}</button> -->
+                <view class="sub-title">删除通知恢复，确定要删除吗？</view>
+            </view>
+        </modal>
+        <view class="btn-large-wrap"  wx:if="{{isManager=='true'}}">
+            <button class="btn-large" @tap="createNew">我要发布通知</button>
+      </view>
+   
+  </scroll-view>
+  <view wx:else class="blank-center">
+    <view>
+     <view class="sub-title">还未发布任何通知</view>
+      <button wx:if="{{isManager=='true'}}" class="btn-large" @tap="createNew" style="border-radius:0">我要发布新的通知</button>
+      </view>
+  </view>
+</view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  import indexList from '../components/indexList'
+  import modal from '../components/modal'
+   import Auth from '../utils/auth'
+  import Config from '../utils/config'
+  import Tips from '../utils/tip'
+
+  export default class noticeList extends wepy.page {
+
+    config = {
+      navigationBarTitleText: '所有通知'
+    }
+    components = {
+      indexList: indexList,
+      modal:modal
+    }
+    data = {
+      deleteId:'',
+      optionId:'',
+      isManager:false,
+      modalshow:false,
+      list: [],
+    }
+    methods ={
+      goDetail(msg){
+         this.$$navigate('./noticeDetail?item='+JSON.stringify(this.list[msg.index]))
+      },
+
+      deleteItem(id){
+        this.modalshow=true;
+        this.deleteId =id.id;
+      },
+      createNew(){
+        this.$navigate('./postNotice?id='+this.optionId)
+      },
+     
+     async confirmFunc(){
+        await Config.deleteNotice(this.deleteId);
+        Tips.toast('删除成功');
+        this.modalshow=false;
+        this.list.forEach((item,index)=> {
+         if(item.id===this.deleteId){
+            this.list.splice(index,1);
+         }
+         this.$apply();
+      })
+    }
+  }
+   async getData(pageIndex){
+      const params={
+        'GroupID':this.optionId,
+      }
+      let res=await Config.allNotice(params);
+      this.list = res.Notices;
+      this.list.forEach((item)=>{
+        item.OpenID==Auth.getConfig('openId')?item.deleteIconShow=true:item.deleteIconShow=false;
+      });
+      this.$apply();
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '每日膳膳签小程序',
+        path: '/page/index'
+      }
+    }
+    
+    onShow(){
+      this.getData()
+    }
+    onLoad(option) {
+      this.optionId=option.id;
+      this.isManager=option.isManager;
+      wepy.showShareMenu({
+        withShareTicket: true
+      })
+    }
+  }
+</script>

@@ -5,11 +5,15 @@
 		"es6": false,
 		"postcss": false,
 		"minified": false,
-		"newFeature": true
+		"newFeature": true,
+		"autoAudits": false,
+		"checkInvalidKey": true
 	},
 	"compileType": "miniprogram",
-	"appid": "wxa43bfdeadcfb68be",
-	"projectname": "tag",
+	"appid": "wx9402286955bc5ba8",
+	"projectname": "qiuqian99",
 	"miniprogramRoot": "dist/",
+	"simulatorType": "wechat",
+	"simulatorPluginLibVersion": {},
 	"condition": {}
 }

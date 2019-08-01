@@ -1,0 +1,102 @@
+<template>
+	
+	<view class="page">
+		<button class="btn-large" open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="bindGetUserInfo">
+		授权登录
+		</button>
+	</view>
+</template>
+<script>
+	import wepy from 'wepy';
+	 import Auth from '../utils/auth';
+	 import Config from '../utils/config';
+	 
+	export default class Login extends wepy.page {
+		config = {
+	      navigationBarTitleText: '每日膳膳签'
+	    }
+		
+		data={
+			optionId:'',
+			scene:'',
+			modalAlertShow:false,
+		}
+		 onLoad(option){
+			this.optionId=option.optionId;
+			this.scene=option.scene;
+		}
+		methods = {
+			async bindGetUserInfo(e) {
+				let that=this;
+				console.log(JSON.stringify(e.detail))
+				if (e.detail.errMsg == 'getUserInfo:ok') {
+					let res = await wepy.login();
+					if (res.code) {
+						let loginRes=await Config.getOpenId(res.code);//
+						//获取token，接下来获取用户微信微信,调用注册接口
+						if (loginRes.OpenID) {
+							const userInfo =await wepy.getUserInfo();
+							wepy.$instance.globalData.auth=userInfo.userInfo;
+							// 用户已经同意
+							let registParam={//注册
+								OpenID:loginRes.OpenID,
+								NickName:userInfo.nickName,
+								avatarUrl:userInfo.avatarUrl,
+								Gender:userInfo.Gender,
+								encryptedData:userInfo.encryptedData,
+								iv:userInfo.iv
+							}											
+							let registRes=await Config.register(registParam);
+							let loginToken = await Config.getToken({'OpenID':loginRes.OpenID}
+							);//获取登录token
+							Auth.setConfig("openId", loginRes.OpenID);
+							Auth.setConfig("loginToken", loginToken);
+							Auth.setConfig("userInfo", JSON.stringify(userInfo.userInfo));
+							if(that.scene=='true'){
+								wx.redirectTo({   
+						         url: '/pages/signItemDetail?GroupID='+that.optionId,
+							   })
+							}else{
+								console.log('====index')
+								wx.switchTab({
+						         url: '/pages/index',
+						         success: function (e) {
+						         }
+								})
+							}
+						}
+					}
+				}else {
+					let res = await wepy.showModal({
+						title: 'appid有误',
+						content: '授权失败'
+					})
+					if (res.confirm) {
+						wepy.switchTab({
+						url: '/pages/index'
+						})
+					}
+				}
+			},
+			
+		}
+	}
+</script>
+<style lang="less" scoped>
+.page{
+	padding-top:50%;
+}
+.content {
+	padding:0rpx 40rpx
+}
+.sub-title{
+	color:#000;
+}
+ 
+.content text {
+    display: block;
+	color: #808080;
+	font-size:28rpx;
+    margin-top:0rpx;
+}
+</style>

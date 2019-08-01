@@ -1,0 +1,175 @@
+<style lang="less" scoped>
+    // @import "../style/app.less";
+    @btn-primary-color:#FF6F61;
+    .container-share{
+        position:relative;
+        margin:0rpx 40rpx 40rpx 40rpx;
+        border-radius:12rpx 12rpx 0 0 ;
+        padding:30rpx 20rpx;
+        height:740rpx;
+        background:#fff;
+    }
+    .top-view{
+        padding: 28rpx 40rpx;
+        .sub-title{
+            padding-bottom: 0px;
+        }
+    }
+     .canvas{
+        width:100%;
+        height:100%;
+    }
+    
+    .user-info{
+        padding-bottom:40rpx;
+        border-bottom:1rpx solid rgba(240,240,240,1);
+        text-align: center;
+        line-height: 40rpx;
+        .user{
+            color:@btn-primary-color;
+            font-size: 38rpx;
+        }
+        .date{
+            font-size:28rpx;
+            color:#9F9F9F
+        }
+    }
+    .share-content{
+        text-align:center;
+        padding-top:40rpx;
+        .tip-text{
+           padding-bottom:20rpx
+        }
+           
+    }
+</style>
+<template>
+    <view style="height:100%">
+        <view class="flex-form top-view">
+            <view class="btn-round disabled" @tap="back">返回</view>
+            <!-- <view class="sub-title" @tap="changeBg">换一换</view> -->
+            <view class="btn-round" @tap="download">保存</view>
+        </view>
+        <view class="container-share">
+             <canvas class="canvas" canvas-id="canvasBg" >
+            </canvas>
+                
+        </view>
+        <view class="sub-title">如生成分享图失败，请返回刷新或多试几次~</view>
+    </view>
+</template>
+<script>
+ import wepy from 'wepy';
+  import Auth from '../utils/auth'
+  import Config from '../utils/config'
+
+  export default class wxCodeShare extends wepy.page {
+     config = {
+      navigationBarTitleText: '二维码分享'
+    }
+    
+
+    data={
+        date:'',
+        shareTitle:'',
+        QRcodeImg:''
+    }
+
+    methods={
+
+        download () {
+            this.getAlbumScope()
+            // 导出图片
+            Auth.saveImage(this.QRcodeImg);
+        },
+        back(){
+            wx.navigateBack({
+                 delta: 1
+            })
+        },
+    }
+    //获取相册授权
+    getAlbumScope(){
+        wx.getSetting({
+          success(res) {
+            if (!res.authSetting['scope.writePhotosAlbum']) {
+              wx.authorize({
+              scope:'scope.writePhotosAlbum',
+              success() {
+                console.log('授权成功')
+                }
+              })
+            }
+          }
+        })
+    }
+    createRpx2px() {
+      const { windowWidth } = wx.getSystemInfoSync()
+      return function(rpx) {
+        return windowWidth / 750 * rpx
+      }
+    }
+    drawImage(){
+       const QrImg= Auth.getImageInfo(this.QRcodeImg);
+       // alert('QrImg---'+QrImg);
+       Promise.all([QrImg]).then(([res])=>{
+        console.log('res.path---'+res.path);
+        wx.showLoading('图片生成中...')
+        const rpx=this.createRpx2px();
+        const context = wx.createCanvasContext('canvasBg');
+        const canvasWidth=rpx(320*2);
+        const canvasHeight=rpx(320*2);
+        context.drawImage(res.path,30,50,canvasWidth-rpx(80*2),canvasHeight-rpx(80*2));
+        console.log(JSON.stringify(context));
+         context.setFontSize(rpx(18 * 2));
+        context.setFillStyle('#08c');  
+        context.setTextAlign('center');
+        context.fillText(
+            this.shareTitle,
+            canvasWidth/2,
+            20
+        );
+         context.setFontSize(rpx(14 * 2));
+        context.setFillStyle('#505050');
+        context.fillText(
+            this.date,
+            canvasWidth/2,
+            40
+        );
+        context.fillText(
+            '长按或扫码进入',
+           canvasWidth/2,
+           canvasHeight+20
+        );
+        context.setFillStyle('#9f9f9f');
+        context.fillText(
+            '微信小程序：每日膳膳签',
+            canvasWidth/2,
+            canvasHeight+40
+        );
+        context.fillText(
+            '如扫码失败请升级微信至最新版',
+            canvasWidth/2,
+            canvasHeight+60
+        );
+         context.draw(false, () => {
+            Auth.drawImage({
+              canvasId: 'canvasBg',
+            }, this).then(({ tempFilePath }) => {
+                // alert(JSON.stringify(tempFilePath))
+                this.QRcodeImg= tempFilePath 
+                wx.hideLoading()
+            }).catch((error)=>{alert('错误--'+JSON.stringify(error));wx.hideLoading()})
+          })
+       })
+
+    }
+    async onLoad(option){
+        this.shareTitle=option.groupTitle;
+        this.date=option.date;
+        this.QRcodeImg =await Config.getWXCode(option.id);
+        this.drawImage()
+        this.$apply()
+    }
+  }
+</script>

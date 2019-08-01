@@ -1,0 +1,114 @@
+<template>
+    <view>
+        <view class="top-content ">
+            <view @tap="createNew">
+            <view  class="iconfont icon-tianjia"></view>
+            <text class='sub-title' >自定义签到</text>
+            </view>
+        </view>
+        <view class="middle-content">
+            <text class="sub-title">更多推荐</text>
+            <view class="flex-form">
+                <view class="round-tab" @tap="contactUs"><view class="iconfont icon-shuqian1"></view>联系客服</view>
+                <view  class="round-tab" @tap="joinMore"><view class="iconfont icon-shuqian1"></view>参与更多</view>
+            </view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy'
+ import Auth from '../utils/auth'
+  import Config from '../utils/config'
+import Tips from '../utils/tip'
+export default class CreateNewSign extends wepy.page  {
+    config = {
+        navigationBarTitleText: '新建签到',
+    }
+
+    methods = {
+        createNew(){
+            this.$navigate('./addNewSign')
+        },
+        contactUs(){
+            Tips.toast('敬请期待','none')
+        },
+        joinMore(){
+           this.$navigate('./more')
+        }
+    }
+    onShareAppMessage(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '每日膳膳签小程序',
+        path: '/page/index'
+      }
+   }
+   async onShow(){
+        Auth.setMessageCount();//获取未读消息数量
+   }
+   onLoad(){
+    
+     wepy.showShareMenu({
+        withShareTicket: true
+      })
+   }
+}
+</script>
+<style lang="less" scoped>
+    .top-content{
+        margin:30rpx;
+        padding: 20rpx;
+        height: 300rpx;
+        border-radius: 10rpx;
+        background:#fff;
+        display: -webkit-flex;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .icon-tianjia{
+            color:#FF6F61;
+            text-align:center;
+            margin-bottom:15rpx;
+            font-size:74rpx
+        }
+    }
+    .middle-content{
+        padding: 10px 0px;
+        width:100%;
+        .sub-title{
+            text-align: left;
+            padding:0rpx 0rpx 20rpx 30rpx;
+        }
+        .flex-form{
+            justify-content: center;
+            padding:0rpx 20rpx;
+            &>view{
+                position: relative;
+                margin: 0rpx 10rpx 0rpx 10rpx;
+                height: 200rpx;
+                line-height: 200rpx;
+                width:calc(50%);
+                text-align: center;
+                color:#fff;
+                border-radius: 10rpx;
+                font-size:28rpx;
+                -webkit-background: linear-gradient(to right,#FFA0BD,#FF763E);
+                background: linear-gradient(to right,#FFA0BD,#FF763E);
+                &:first-child{
+                    -webkit-background: linear-gradient(to right,#93A5FF,#5CDDFF);
+                    background: linear-gradient(to right,#93A5FF,#5CDDFF)
+                }
+            }
+            .icon-shuqian1{
+                position: absolute;
+                left:15rpx;
+                top:-82rpx;
+                color:#fff;
+                font-size:41rpx;
+            }
+        }
+    }
+</style>
