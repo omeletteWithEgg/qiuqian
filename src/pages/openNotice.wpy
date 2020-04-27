@@ -1,7 +1,6 @@
 <style lang="less">
 
 .content{
-    // height: 100%;
     margin:40rpx 50rpx;
     padding:20rpx;
     border-radius: 20rpx;
@@ -35,7 +34,9 @@
                <view>A. 微信搜索“广州秋草堂”，点击关注</view>
                 <view >
                 B. 保存下面二维码图片，打开微信二维码找到相册图片，也 可以关注哦～
+                
                 </view>
+                <image @tap="saveImage" src="{{src}}" style="width:250rpx;height:250rpx;margin:0 auto;display:block"></image>
             </view>
            
           
@@ -44,14 +45,23 @@
 </template>
 <script>
  import wepy from 'wepy'
+  import Auth from '../utils/auth'
 
  export default class openNotice extends wepy.page{
     config = {
       navigationBarTitleText: '开启签到提醒说明'
     }
 
-    data={
-        
+    data = {
+        src:'../images/9d6fd4ca583a10a817f79593631da88.jpg'
+    }
+    methods={
+        saveImage(){
+         
+            Auth.getImageInfo(this.src).then((res)=>{
+             Auth.saveImage(res.path);
+            })
+        }
     }
  }
 </script>

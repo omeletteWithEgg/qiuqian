@@ -1,8 +1,11 @@
 <template>
 	
 	<view class="page">
-		<button class="btn-large" open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="bindGetUserInfo">
+		<button class="btn-large" open-type="getUserInfo" lang="zh_CN" data-method="subscribe" bindgetuserinfo="bindGetUserInfo">
 		授权登录
+		</button>
+		<button class="btn-large btn-outline-mini" @tap="cancelLogin" data-method="subscribe">
+		暂不登录
 		</button>
 	</view>
 </template>
@@ -10,14 +13,14 @@
 	import wepy from 'wepy';
 	 import Auth from '../utils/auth';
 	 import Config from '../utils/config';
+  	import Tips from '../utils/tip';
 	 
 	export default class Login extends wepy.page {
 		config = {
-	      navigationBarTitleText: '每日膳膳签'
+	      navigationStyle: 'custom'
 	    }
 		
 		data={
-			modalAlertShow:false,
 		}
 		 onLoad(option){
 		}
@@ -35,9 +38,9 @@
 							// 用户已经同意
 							let registParam={//注册
 								OpenID:loginRes.OpenID,
-								NickName:userInfo.nickName,
-								avatarUrl:userInfo.avatarUrl,
-								Gender:userInfo.Gender,
+								NickName:userInfo.userInfo.nickName,
+								avatarUrl:userInfo.userInfo.avatarUrl,
+								Gender:userInfo.userInfo.gender,
 								encryptedData:userInfo.encryptedData,
 								iv:userInfo.iv
 							}											
@@ -47,33 +50,71 @@
 							Auth.setConfig("openId", loginRes.OpenID);
 							Auth.setConfig("loginToken", loginToken);
 							Auth.setConfig("userInfo", JSON.stringify(userInfo.userInfo));
-							wx.switchTab({
-					         url: '/pages/index',
-					         success: function (e) {
-								wepy.$instance.globalData.scene=true
-					         }
-							})
+							 const avatarUrl =await Config.getUserInfo(Auth.getConfig('openId'));
+								Auth.setConfig("avatarUrl",avatarUrl.avatarUrl);
+								console.log(wepy.$instance.globalData.path)
+							if(wepy.$instance.globalData.scene==true){
+								
+								if(wepy.$instance.globalData.path){
+									const path=wepy.$instance.globalData.path.substring(5);
+									if(wepy.$instance.globalData.path=='pages/index'){
+										wx.redirectTo({
+											url: `./signItemDetail?item=${JSON.stringify(wepy.$instance.globalData.query)}`
+										})
+									}else{
+										wx.redirectTo({url:'.'+path+`?item=${JSON.stringify(wepy.$instance.globalData.query)}`})
+									}
+								}else{
+									 let pages = getCurrentPages();
+									let prevPage = pages[pages.length - 2];
+									 prevPage.getData();
+									wx.switchTab({
+							         url: '/pages/index',   
+							         success: function (e) {
+							         }
+									})
+								}
+								wepy.$instance.globalData.scene=false
+							}else{
+								 let pages = getCurrentPages();
+								let prevPage = pages[pages.length - 2];
+								 prevPage.getData();
+								wx.switchTab({
+						         url: '/pages/index',
+						         success: function (e) {
+						         }
+								})
+							}
+							
 						}
 					}
 				}else {
 					let res = await wepy.showModal({
 						title: 'appid有误',
-						content: '授权失败'
+						content: '授权失败,请重新授权'
 					})
-					if (res.confirm) {
-						wepy.switchTab({
-						url: '/pages/index'
-						})
-					}
 				}
 			},
-			
+			cancelLogin(){
+				Tips.confirm('取消授权,将无法体验小程序更多精彩功能').then(()=>{
+					wx.switchTab({
+			         url: '/pages/index',
+			         success: function (e) {
+				// 		wx.switchTab({
+				//          url: '/pages/index',
+				//          success: function (e) {
+				//          }
+				// 		})
+			         }
+					})
+				})
+			}
 		}
 	}
 </script>
 <style lang="less" scoped>
 .page{
-	padding-top:50%;
+	padding-top:70%;
 }
 .content {
 	padding:0rpx 40rpx
@@ -87,5 +128,13 @@
 	color: #808080;
 	font-size:28rpx;
     margin-top:0rpx;
+}
+.btn-outline-mini{
+	color:#666;
+	background:#aeaeae;
+	margin-top:60rpx;
+	border:1px solid #ccc;
+	line-height: 72rpx
+
 }
 </style>

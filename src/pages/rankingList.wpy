@@ -1,9 +1,18 @@
 <style lang="less" scoped>
     .top-view{
+        padding-top:40rpx;
         background: #fff;
         border-bottom:20rpx solid rgb(233, 233, 233);
+        .picker.btn-outline-mini{
+            width: 79px;
+            margin-left: 20px;
+            .picker-view{
+                display: flex;
+            }
+        }
         .flex-form{
             padding:20rpx 40rpx;
+            &.tag{justify-content:left}
             &.tab{
                  border-top:1rpx solid rgb(233, 233, 233);
                   font-size:24rpx;
@@ -20,10 +29,6 @@
                 display: inline-block;
                
             }
-            .icon-tishi{
-                color:#808080;
-                vertical-align: middle;
-            }
             .btn-mini{
                 border-radius: 24rpx;
             }
@@ -34,7 +39,6 @@
         background: #fff;
         color:#505050;
         font-size:24rpx;
-       
         >view{
              padding: 20rpx 40rpx;
             border-bottom: 1rpx solid rgb(233, 233, 233);
@@ -64,25 +68,28 @@
 </style>
 <template>
 <view>
-    <scroll-view>
        
         <view class="top-view">
-            <view class="flex-form">
-                
-                <view>
-                     <text  wx:for="{{radioBtn}}" class="{{item.btnStatus}}" data-id="{{item.id}}" @tap="changeRankType">{{item.text}}</text>
+            <picker class="btn-outline-mini picker"   bindchange="bindPickerChange" value="{{pickerIndex}}" range="{{array}}" >
+                <view class="picker-view">
+                     {{rangkingType}}
+                    <view class="iconfont icon-jiantouarrow486"></view>
+
                 </view>
-                <!-- <view><view class="{{ifChoosed}}" @tap="changeRankList">按排名排序</view><text class="iconfont icon-tishi" @tap="showModel"></text></view> -->
+            </picker>
+            <view class="flex-form tag">
+                     <text  wx:for="{{radioBtn}}" class="{{item.btnStatus}}" data-id="{{item.id}}" @tap="changeRankType">{{item.text}}</text>
             </view>
             <view class="flex-form tab">
                 <view class="tabCls {{item.class}}" data-id="{{item.text}}"  @tap="changeTab" wx:for="{{tab}}"> {{item.text}}（{{item.num?item.num:'0'}}人）</view>
-                <!-- <view  class="{{tabCls1}}"  data-id="1" @tap="changeTab"> {{tab1Text}}（{{lastNum}}人）</view> -->
             </view>
         </view>
         <view class="list-view" wx:if="{{rankingList.length>0}}">
             <view wx:for="{{rankingList}}" class="flex-form">
-                <view class="">
-                    <text class="iconfont icon-xingxing" wx:if="{{index<3}}"></text>
+                <view class="" @tap="toDetailPage" data-item="{{item}}">
+                    <text class="iconfont icon-xingxing" wx:if="{{index<3&&starNoShow}}"></text>
+                    <text class="tip-text" wx:if="{{index<3&&!starNoShow}}" style="width:38rpx">{{index+1}}</text>
+
                     <text class="tip-text" wx:if="{{index>2}}" style="width:38rpx">{{index+1}}</text>
                     <image type="scaleToFill" style="width:44rpx;height:44rpx;border-radius:100%;margin:0 20rpx;vertical-align:middle;" src="{{item.avatarUrl}}"></image> 
                     <text class="user">{{item.NickName}}</text> 
@@ -90,20 +97,8 @@
                 <view class="tip-text">累计{{item.TotolTimes}}次</view>
             </view>
         </view>
-        <view wx:else class="blank-center">
-            <view class="sub-title">暂无数据</view>
-        </view>
-        <modal :modaltitle="modalTitle"
-        :lefttext="lefttext"
-        :modalshow.sync="modalShow"
-        :rightbtnshow="rightbtnshow"
-        @confirmFunc.user="modalClick" >
-        <view slot="content" class="content">
-           <text class="tip-text">暂时没有数据哦</text>
-         </view>
-        </modal>
+            <view wx:else class="blank-center sub-title">暂无数据</view>
          
-    </scroll-view>
 </view>
 </template>
 <script>
@@ -112,23 +107,22 @@
   import Config from '../utils/config'
   import Tips from '../utils/tip'
 
- import modal from '../components/modal';
 
   export default class rankingList extends wepy.page {
      config = {
       navigationBarTitleText: '排行榜'
     }
-    components = {
-      modal:modal
-    }
+   
     data={
-        optionId:'',
         list:{},
-        modalTitle:'排行榜规则说明',
-        lefttext:'我知道了',
-        rightbtnshow:false,
-        modalShow:false,
         tabIndex:'1',
+        pickerIndex:0,
+        array:[
+         '按签到次数排名',
+         '按签到名字排名'
+        ],
+        starNoShow:true,
+        rangkingType:'按签到次数排名',
         ifChoosed:'btn-outline-mini ',
         tab:[
             {'text':'已签到','num':'','class':''},
@@ -139,21 +133,33 @@
          {'text':"昨日",'id':"-1",'btnStatus':'btn-outline-mini '},
          {'text':"总榜",'id':"0",'btnStatus':' btn-outline-mini'}
         ],
-        rankingList:[
-            // {'NickName':'sgsg0','avatarUrl':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','TotolTimes':'3444','ranking':'2'},
-            // {'NickName':'sgsg0','avatarUrl':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','TotolTimes':'3444','ranking':'1'},
-            // {'NickName':'sgsg0','avatarUrl':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','TotolTimes':'3444','ranking':'3'},
-            // {'NickName':'sgsg0','avatarUrl':'../images/20151023194034_zc2Fv.thumb.700_0.jpeg','TotolTimes':'3444','ranking':'4'},
-        ]
+        rankingList:[],
+        sort:'1',
+        rank:'SignedRank'
     }
-
+    staticData={
+         optionId:'',
+         signNum:'',
+         groupInfo:{},
+         userSetting:{}
+    }
     methods = {
-        changeRankList(){
-            if(this.ifChoosed=='btn-outline-mini'){
-                this.ifChoosed='btn-mini'
+        toDetailPage(e){
+            const item = e.currentTarget.dataset['item'];
+             this.$navigate('./myRecords?id='+this.staticData.optionId+'&userInfo='+JSON.stringify(this.staticData.userSetting)+'&signNum='+this.staticData.signNum+'&isManager=false&groupInfo='+JSON.stringify(this.staticData.groupInfo)+'&openId='+item.OpenID+'&nickName='+item.NickName+'&avatarUrl='+item.avatarUrl)
+        },
+        bindPickerChange(e){
+            if(e.detail.value=='0'){
+                this.rangkingType='按签到次数排名'
+                this.sort = '1'
+                this.$apply();
             }else{
-                this.ifChoosed='btn-outline-mini'
+                 this.sort = '2'
+                this.rangkingType='按签到名字排名'
             }
+                this.$apply()
+                this.initData(this.sort)
+
         },
         changeTab(event){
             this.tab.forEach((item)=>{
@@ -162,21 +168,32 @@
                 }else{
                      item.class='tip-text'
                 }
+                if(item.text=='未签到'){
+                    this.starNoShow = false;
+                }else{
+                    this.starNoShow = true;
+                }
             });
             if(event.currentTarget.dataset.id=='已签到'){
-                this.initData('SignedRank');
+                 this.rank='SignedRank'
+
             }
             if(event.currentTarget.dataset.id=='未签到'){
-                this.initData('UnSignedRank');
+                 this.rank='UnSignedRank'
+
             }
             if(event.currentTarget.dataset.id=='累计排行榜'){
-                this.initData('TotalSignedRank');
+                 this.rank='TotalSignedRank'
+
             }
             if(event.currentTarget.dataset.id=='累计连续排行榜'){
-                 this.initData('ContinueSignedRank');
+                 this.rank='ContinueSignedRank'
             }
+             this.initData(this.sort);
         },
         changeRankType(event){
+            this.starNoShow = true;
+
             this.tabIndex=event.currentTarget.dataset.id;
             this.tab[0].class='';
             this.tab[1].class='tip-text';
@@ -185,48 +202,51 @@
                 if(item.id== this.tabIndex){
                      item.btnStatus='btn-mini';
                     if(this.tabIndex!='0'){
-                        this.initData('SignedRank');
+                        this.rank='SignedRank'
+
                         this.tab[0].text='已签到'
                         this.tab[1].text='未签到'
                     }else{
-                        this.initData('TotalSignedRank');
+                        this.rank='TotalSignedRank'
+
                         this.tab[0].text='累计排行榜'
-                        this.tab[1].text='累计连续排行榜'
+                        this.tab[1].text='累计连续排行榜';
+                        
                     }
+                        this.initData(this.sort);
+
                 }
             });
         },
-        showModel(){
-            this.modalShow=true;
-        },
-         modalClick(ifShow){
-             this.modalShow=ifShow
-        }
+        
        
     }
 
-    async initData(data){
+    async initData(sort){
         let param={
-            'GroupID':this.optionId,
-            'day':this.tabIndex
+            'GroupID':this.staticData.optionId,
+            'day':this.tabIndex,
+            'sort':sort
         }
         this.list=await Config.rangkingList(param);
-        if(data=='TotalSignedRank'||data=='ContinueSignedRank'){
+        if(this.rank=='TotalSignedRank'||this.rank=='ContinueSignedRank'){
             this.list.TotalSignedRank=='null'?this.tab[0].num=0:this.tab[0].num=this.list.TotalSignedRank.length;
             this.list.ContinueSignedRank=='null'?this.tab[1].num=0:this.tab[1].num=this.list.TotalSignedRank.length;
-            // this.tab[1].num = this.list.ContinueSignedRank.length;
         }else{
             this.tab[0].num=this.list.SignedNumber;
             this.tab[1].num = this.list.UnSignedNumber;
         }
-        this.rankingList = this.list[data];
+        this.rankingList = this.list[this.rank];
         this.$apply();
     }
 
     onLoad(option){
-        this.optionId=option.id;
-        this.initData('SignedRank');
-        console.log(JSON.stringify(this.list))
+        this.staticData.optionId=option.id;
+        this.staticData.signNum=option.signNum;
+        this.staticData.groupInfo=JSON.parse(option.groupInfo)
+        this.staticData.userSetting=JSON.parse(option.userInfo)
+
+        this.initData(this.sort);
     }
 }
 

@@ -214,7 +214,6 @@
                     <view class="img-wrap"><image type="scaleToFill" style="width:60rpx;height:60rpx;border-radius:100%;margin-right:20rpx" src="{{avatarUrl}}"></image>  </view>
                     <view class="user">{{nickName}}</view> 
                 </view>
-                <!-- <view class="btn-outline-mini" @tap="backLastPage">返回签到</view> -->
             </view>
             <view class="flex-form">
                 <view  wx:for="{{recordsList}}">
@@ -236,7 +235,7 @@
                     <view class="iconfont icon-jiantouarrow486"></view>
 
                 </picker>
-                <button class=" btn-round" @tap="setAvaliCount">确定</button>
+                <button class=" btn-round" @tap="setAvaliCount" data-method="subscribe">确定</button>
             </view>
 
         </view>
@@ -245,12 +244,11 @@
     <view class="view-calendar">
        <Calendar :checks.sync="signDateList" :reChecks.sync="reSignList" theme="default" /> 
        <block wx:if="{{signNum!=-1&&onlyOpenID==me}}">
-         <!-- <view class="sub-text">在上面日历中选择你需要补签的日期</view> -->
          <view class="flex-form">
-             <button class="btn-round" wx:if="{{showBtn=='0'}}"  @tap="toSign" disabled="{{!ifCanSign}}">去签到{{signTip}}</button>
+             <button class="btn-round" wx:if="{{showBtn=='0'}}" data-method="subscribe"  @tap="toSign" disabled="{{!ifCanSign||ifCanSign=='false'}}">去签到{{signTip}}</button>
              <button class="btn-round" wx:if="{{showBtn==''}}" disabled>已签到</button>
-             <button class="btn-round" wx:if ="{{showBtn=='1'&&groupInfo.CanResign}}" disabled="{{resigned}}" @tap="toSigned">{{!resigned?'申请补签':'已经补签'}}</button>
-             <button class="btn-round disabled" wx:if="{{showBtn=='1'&&!groupInfo.CanResign}}">不可补签</button>
+             <button class="btn-round" data-method="subscribe" wx:if ="{{showBtn=='1'&&groupInfo.CanResign}}" disabled="{{resigned}}" @tap="toSigned">{{!resigned?'申请补签':'已经补签'}}</button>
+             <button class="btn-round disabled" wx:if="{{showBtn=='3'||!groupInfo.CanResign}}">不可补签</button>
          </view>
          <view class="sub-text" style="padding-top:28rpx">剩余{{leaveTimes}}次补签机会 <text class="blue-text" @tap="applyResignFunc" wx:if="{{leaveTimes==0&&showBtn=='1'&&groupInfo.CanResign}}">找管理员申请补签</text></view>
        </block>
@@ -339,7 +337,7 @@
      loadMore:false,
      nickName:'',
      avatarUrl:'',
-     ifCanSign:false,
+     ifCanSign:true,
      loadMoreText:'加载中...',
      hasMore:true,
      groupInfo:'',
@@ -349,7 +347,6 @@
      currentIndex:0,
      leaveTimes:'',
      signTip:'',
-      innerAudioContext:{},
      signDateList:[],
      reSignList:[],
      recordsList:[],
@@ -371,32 +368,42 @@
         'url':'./commentDetail'
      }]
    }
-
+ staticData={
+      innerAudioContext:{},
+      userSetting:{}
+ }
     events = {
       calendarAfterTapDay(date, e) {
         this.tapDate=date;
-        console.log(date);
-        let tapDate=new Date(date).getTime();
+        let tapDate=new Date(this.tapDate).getTime();
         let today=new Date(Config.nowDate()).getTime();
         let begin=new Date(this.groupInfo.BeginDate).getTime();
-        this.showBtn='1';
+        console.log(tapDate)
+        console.log(begin)
+
+        this.showBtn='1'
         if(tapDate==today){
-          this.showBtn='0'
+          if(this.signNum==this.groupInfo.SignTimes){
+            this.showBtn=''
+          }else{
+            this.showBtn='0'
+          }
         }else if(tapDate>today||tapDate<begin){
           this.showBtn='2'
-        };
+        }
+        console.log(this.showBtn)
         this.signDateList.forEach((item)=>{
           let timeDate=new Date(item).getTime();
           if(timeDate==tapDate&&tapDate<today){
               this.showBtn='2';
           }
-          
         });
         this.reSignList.forEach((item)=>{
           let timeDate=new Date(item).getTime();
           timeDate==tapDate?this.resigned=true:this.resigned=false
-          
+         
         })
+         this.$apply()
       }
     }
    methods = {
@@ -404,7 +411,7 @@
       const url = e.currentTarget.dataset.url;
       let creater=Auth.getConfig('openId');
       let isManager=this.isManager||creater==this.groupInfo.OpenID;
-      if(this.signNum=='-1'){
+      if(this.signNum=='-1'||this.signNum=='-2'){
         this.joinModal=true;
           this.$apply();
       }else if(this.signNum!='-1'&&url!=''){
@@ -421,9 +428,8 @@
       })
     },
      audioPlay(e){
-      Auth.audioPlay(this.innerAudioContext,e,this.myMomentsList,()=>{this.$apply()})
+      Auth.audioPlay(this.staticData.innerAudioContext,e,this.myMomentsList,()=>{this.$apply()})
      },
-  
     listBtnClickFunc(id){
       if(this.commentsBtnList[id.id].url=='./commentDetail'){
           this.myMomentsList.forEach((item)=>{
@@ -433,14 +439,13 @@
             })
           }
         });
-        // this.innerAudioContext.onStop()
       }
+       let date=this.groupInfo.BeginDate+'至'+this.groupInfo.EndDate;
         this.currentIndex = this.myMomentsList.findIndex(item=>item.SignID==id.msgId);
-
-       this.$root.$navigate(this.commentsBtnList[id.id].url+'?msg='+JSON.stringify(id.msg)+'&userInfo='+JSON.stringify(id.msg)+"&type=1&id="+this.optionId+'&bgImg='+this.groupInfo.BackgroundURL+'&groupInfo='+JSON.stringify(this.myMomentsList[this.currentIndex]));
+       this.$root.$navigate(this.commentsBtnList[id.id].url+'?msg='+JSON.stringify(id.msg)+'&userInfo='+JSON.stringify(this.staticData.userSetting)+"&type=1&id="+this.optionId+'&title='+this.groupInfo.GroupTitle+'&date='+date+'&bgImg='+this.groupInfo.BackgroundURL+'&groupInfo='+JSON.stringify(this.myMomentsList[this.currentIndex]));
     }, 
      async toTopFunc(id){
-      let currentIndex=this.myMomentsList.findIndex(item=>item.SignID==id.SignID);
+      let currentIndex=this.myMomentsList.findIndex((item)=>item.SignID==id.SignID);
         let currentItem=this.myMomentsList[currentIndex];
         let Operate,toastText;
         if(id.IsTop==true){
@@ -450,45 +455,57 @@
           Operate=1;
           toastText='置顶成功';
         }
+        this.pageIndex=1;
+        this.hasMore=true;
         await Config.toTop('?SignID='+id.SignID+'&GroupID='+this.optionId+'&Operate='+Operate+'&AdminOpenID='+Auth.getConfig('openId'));
-       this.loadList()
+       this.loadList();
+      
         this.$broadcast('toTop',true)
         this.$apply();
         Tips.toast(toastText);
     },
-   
     async deleteMsg(msg){//删除签到
-      await Config.deleteMessage('?SignID='+msg.SignID+'&GroupID='+this.optionId+'&OpenID='+msg.OpenID+'&AdminOpenID='+Auth.getConfig('openId'));
-      this.myMomentsList.splice(this.myMomentsList.findIndex(item=>item.SignID==msg.SignID),1);
+      const res = await Config.deleteMessage('?SignID='+msg.SignID+'&GroupID='+this.optionId+'&OpenID='+msg.OpenID+'&AdminOpenID='+Auth.getConfig('openId'));
+      if(!res) return
+     
+     this.myMomentsList.splice(this.myMomentsList.findIndex(item=>item.SignID==msg.SignID),1);
+     
       Tips.toast('删除成功');
       this.$apply();
     },
     async deleteMsgFunc(msg){//删除评论回复
       let type=msg.type;
       if(type=='1'){//回复
-       this.currentIndex=this.myMomentsList.findIndex(item=>item.SignID==msg.SignID);
-        this.$navigate('./postCommet?id='+this.optionId+'&type=2&msg='+JSON.stringify(msg.msgId)+'&groupInfo='+this.myMomentsList[this.currentIndex])
+       this.currentIndex=this.myMomentsList.findIndex(item=>item.SignID==msg.msgId.SignID);
+      
+        this.$navigate('./postCommet?id='+this.optionId+'&type=2&msg='+JSON.stringify(msg.msgId)+'&groupInfo='+JSON.stringify(this.myMomentsList[this.currentIndex])+"&userInfo="+JSON.stringify(this.staticData.userSetting))
       }else if(type=='2'){//删除
-       await Config.deleteMessage('?SignID='+msg.signId+'&GroupID='+this.optionId+'&OpenID='+msg.openId+'&messageID='+msg.msgId.MessageID+'&AdminOpenID='+Auth.getConfig('openId'));
-        this.myMomentsList.forEach(item=>{
+       const res = await Config.deleteMessage('?SignID='+msg.signId+'&GroupID='+this.optionId+'&OpenID='+msg.openId+'&messageID='+msg.msgId.MessageID+'&AdminOpenID='+Auth.getConfig('openId'));
+        if(!res) return
+       
+       this.myMomentsList.forEach(item=>{
           if(item.SignID==msg.signId){
             item.Messages.splice(item.Messages.findIndex(sbitem=>sbitem.MessageID==msg.msgId.MessageID),1);
           }
         });
         this.$apply();
         Tips.toast('删除成功');
+      
       }
     },
-   
     async setAvaliCount(){
        if(this.avaliCount<this.leaveTimes){
         Tips.toast('设置的补签次数不能小于当前剩余补签次数','none');
         return
       };
-      await Config.setResign('group/setReSignTimes?GroupID='+this.optionId+'&OpenID='+this.groupInfo.OpenID+'&times='+this.avaliCount+'&AdminOpenID='+Auth.getConfig('openId')+'&MessageID=0');
+      const res = await Config.setResign('group/setReSignTimes?GroupID='+this.optionId+'&OpenID='+this.groupInfo.OpenID+'&times='+this.avaliCount+'&AdminOpenID='+Auth.getConfig('openId')+'&MessageID=0');
+      if(!res) return
+      
       Tips.toast('设置成功');
       this.leaveTimes=this.avaliCount;
       this.$apply()
+      const tempId=['W3rNF7_EbeCZEHPgVBBNYnpqW0g7D_UM-BZaDzjjqaY'];
+      await Auth.subscribeMessage(tempId,['3'])
     },
     inputsignToken(e){
       this.signToken=e.detail.value
@@ -496,13 +513,15 @@
     signTokenClick(){
       if(this.signToken==this.groupInfo.SignToken){
         this.tokenModalShow=false;
-        if(this.ifCanSign){
           if(this.signForm=='sign'){
             this.$navigate('./postMoment?id='+this.optionId+'&signForm='+this.groupInfo.SignForm+'&date=null')
+             const tmplId = ['tYOivDlQOwQ3xWsKk-MmW9_pHkQmEEWIvci_GTSadXc','0jYAq0A0ktHnvgsBqbQzarYH83O0u8lTiLDeiQpCSu4'];
+            Auth.subscribeMessage(tmplId,['2','5'])
           }else if(this.signForm=='resign'){
             this.$navigate('./postMoment?id='+this.optionId+'&signForm='+this.groupInfo.SignForm+'&date='+this.tapDate)
+            const tmplId = ['tYOivDlQOwQ3xWsKk-MmW9_pHkQmEEWIvci_GTSadXc','0jYAq0A0ktHnvgsBqbQzarYH83O0u8lTiLDeiQpCSu4'];
+            Auth.subscribeMessage(tmplId,['2','5'])
           }
-        }
       }else{
         Tips.toast('签到口令输入有误，请联系创建者','none');
         return
@@ -518,7 +537,10 @@
         this.signToken='';
         this.signForm='resign';
       }else{
+
          this.$navigate('./postMoment?id='+this.optionId+'&signForm='+this.groupInfo.SignForm+'&date='+this.tapDate)
+          const tmplId = ['tYOivDlQOwQ3xWsKk-MmW9_pHkQmEEWIvci_GTSadXc','0jYAq0A0ktHnvgsBqbQzarYH83O0u8lTiLDeiQpCSu4'];
+            Auth.subscribeMessage(tmplId,['2','5'])
       }
     },
     toSign(){
@@ -528,23 +550,28 @@
         this.signForm='sign'
       }else{
          this.$navigate('./postMoment?id='+this.optionId+'&signForm='+this.groupInfo.SignForm+'&date=null')
+          const tmplId = ['tYOivDlQOwQ3xWsKk-MmW9_pHkQmEEWIvci_GTSadXc','0jYAq0A0ktHnvgsBqbQzarYH83O0u8lTiLDeiQpCSu4'];
+            Auth.subscribeMessage(tmplId,['2','5'])
       }
     },
     scrollHandler(e){
       this.loadMore=true;
-      this.pageIndex+=1;
       if(this.hasMore==false)return;
+      this.pageIndex+=1;
       this.loadList();
       this.$apply()
     },
 
     async applyResignFunc(){
-       await Config.reSign('user/group/requireResignTime?GroupID='+this.optionId+'&OpenID='+Auth.getConfig('openId'));
+       const res = await Config.reSign('user/group/requireResignTime?GroupID='+this.optionId+'&OpenID='+Auth.getConfig('openId'));
+       if(!res) return
+
        Tips.toast('申请成功，请耐心等待管理员审核','none')
      },
 
     async favoriteFunc(e){
-         Auth.favoriteFunc(this.optionId,e,this.myMomentsList,()=>{this.$apply()})
+         Auth.favoriteFunc(this.optionId,e,this.myMomentsList,()=>{this.$apply()});
+    
     },
     bindPickerChange(e) {
 
@@ -561,34 +588,7 @@
       })
     }
   }
-  // dealNumber(data){
-  //     data.forEach(function(item){
-  //       let newNum = parseInt(item.PraiseTimes);
-  //       newNum>=999?newNum="999+":newNum=newNum
-  //       return newNum
-  //     })
-  //   }
 
-    canSign(){//判断是否可以签到
-      
-      let startdate = new Date(this.groupInfo.BeginDate).getTime();
-      let enddate = new Date(this.groupInfo.EndDate).getTime();
-      let endtime=this.groupInfo.EndTime.split(":");
-      let starttime= this.groupInfo.BeginTime.split(":")
-      endtime = parseInt(endtime[0])*12 + endtime[1]+ endtime[2];
-      starttime = parseInt(starttime[0])*12 + starttime[1]+ starttime[2]
-      let now=Config.now().split(":");
-      now=parseInt(now[0])*12 + now[1]+now[2];
-      let today=Config.today();
-      
-      if(parseInt(endtime)>now&&enddate>today&&parseInt(starttime)<now&&startdate<today&&this.groupInfo.SignTimes>this.signNum){
-         this.ifCanSign=true;
-      }else if(parseInt(endtime)<parseInt(now)||enddate<today||parseInt(starttime)>parseInt(now)||startdate>today){ 
-        this.signTip='(不在签到时间内)';
-        this.ifCanSign=false;
-      }
-
-  }
   async loadList(){
     let param={
         'GroupID':this.optionId,
@@ -598,25 +598,25 @@
         'pageSize':10
     } 
     let list=await Config.onePageInfo(param);
-    
-    if(list.Messages.length==0){
-      this.hasMore=false;
-      this.loadMoreText='暂无更多数据';
-      this.$apply();
-      return;
+   
+    if(!list){
+        this.pageIndex--;
+        return
     }
       list.Messages.forEach(item=>{
-   console.log(JSON.stringify(item.SoundRecordingsList))
         if(item.IsTop===true){
           this.topList+=1;
         }
         item.OpenID==Auth.getConfig('openId')?item.showMore=true:item.showMore=false
       })
       this.pageIndex=='1'?this.myMomentsList = list.Messages:this.myMomentsList = this.myMomentsList.concat(list.Messages);
-
-    // this.dealNumber(this.myMomentsList);
+       this.$broadcast('getMomentsList',this.myMomentsList);
+      if(list.Messages<param.pageSize){
+      this.hasMore=false;
+      this.loadMoreText='暂无更多数据';
+    }
     this.$apply();
-     this.$broadcast('getMomentsList',this.myMomentsList);
+    
   }
   async getData(){
     let param={
@@ -629,7 +629,6 @@
          {'label':'累计签到','num':res.TotalSignTimes},
          {'label':'连续签到','num':res.ContinueSignTimes},
          {'label':'最大连续','num':res.MaxContinueTimes}];
-         console.log(JSON.stringify(this.recordsList))
     !res.ReSignTimes?this.leaveTimes='0':this.leaveTimes=res.ReSignTimes;
     this.avaliCount=parseInt(this.leaveTimes)+1;
     res.SignedDate= res.SignedDate.filter((x,i,s)=>s.indexOf(x)===i);
@@ -645,16 +644,7 @@
     });
     this.$apply()
   }
-   onShareAppMessage(res) {//转发到微信
-      if (res.from === 'button') {
-        this.shareModelShow=false
-      }
-      return {
-        title: '邀请你来签到',
-        // imageUrl:this.groupInfo.BackgroundURL,
-        path: '/pages/index?id='+this.optionId+'&scene=true'
-      }
-   }
+  
    updateSignNum(){
     if(this.signForm=='sign'){
       this.signNum+=1;
@@ -666,12 +656,16 @@
       this.resigned=true
    }
     onUnload(){
+      
       let pages = getCurrentPages();
         let currPage = pages[pages.length - 1];
         let prevPage = pages[pages.length - 2];
-        prevPage.initData();
-        prevPage.loadList('','');
-        this.$apply()
+        if(prevPage.route!=="pages/rankingList"){
+          prevPage.initData();
+          prevPage.loadList();
+          this.$apply()
+        }
+       
     }
   onShow(){
      let pages = getCurrentPages();
@@ -685,24 +679,42 @@
               this.myMomentsList[this.currentIndex]=currPage.data.params.groupInfo;
             }
           }
-         
+          if(currPage.data.params.pageIndex){
+             this.pageIndex=currPage.data.params.pageIndex;
+          } 
+          if(currPage.data.params.hasMore){
+            this.hasMore=currPage.data.params.hasMore;
+          }
         }
   }
-  onLoad(option){
+  async onLoad(option){
+    console.log(option)
     this.optionId=option.id;
     this.isManager=option.isManager;
     this.groupInfo=JSON.parse(option.groupInfo);
-    this.innerAudioContext=wepy.createInnerAudioContext();
+    this.staticData.innerAudioContext=wepy.createInnerAudioContext();
+    this.staticData.userSetting=JSON.parse(option.userInfo);
+
     this.me=Auth.getConfig('openId');
     this.nickName=JSON.parse(Auth.getConfig('userInfo')).nickName;
-    this.avatarUrl=JSON.parse(Auth.getConfig('userInfo')).avatarUrl;
+    this.avatarUrl=Auth.getConfig('avatarUrl');
     this.onlyOpenID=option.openId;
+    option.ifCanSign?this.ifCanSign = option.ifCanSign:this.ifCanSign='';
+    if(this.ifCanSign=='false'){
+      this.signTip='(不在签到时间内)';
+
+    }
     if(option.openId!=this.me){
       this.showMore=false;
       this.nickName=option.nickName;
       this.avatarUrl=option.avatarUrl;
     }
-    this.signNum=parseInt(option.signNum);
+      const stateParam={
+          'OpenID':this.me,
+          'GroupID':this.optionId
+       }
+    let signNum=await Config.groupState(stateParam);
+     this.signNum=isNaN(signNum)?signNum.data:signNum;
     if(this.signNum==this.groupInfo.SignTimes){
       this.showBtn=''
     }else if(this.groupInfo.SignTimes>this.signNum){
@@ -715,7 +727,7 @@
       }
      this.getData();
      this.loadList();
-     this.canSign();
+    //  this.canSign();
   }
 }
 </script>

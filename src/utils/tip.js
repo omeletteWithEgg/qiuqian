@@ -4,7 +4,22 @@ export default class Tips {
     this.isLoading = false;
   }
 
-	static chooseImage(count,sourceType){
+	static compressImage(quality,sourceType){
+    return new Promise((resolve, reject) => {
+      wx.compressImage({
+        src: sourceType, // 图片路径
+        quality: quality,
+        success:res=>{
+          resolve(res)
+        },
+        fail: res => {
+          reject(res);
+        }
+      })
+     })
+  }
+
+  static chooseImage(count,sourceType){
     return new Promise((resolve, reject) => {
       wx.chooseImage({
         count: count,

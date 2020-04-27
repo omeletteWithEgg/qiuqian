@@ -21,10 +21,6 @@
       float:left;
       color:#808080;
     }
-    .qrcode-img{
-      margin-left: 40rpx;
-      height: 100%;
-    }
     .iconfont{
       font-size:60px;
       line-height: 140rpx;
@@ -90,6 +86,7 @@
   -webkit-display:flex;
   display:flex;
 flex-wrap:wrap;
+height: 130rpx;
   padding:20rpx 40rpx}
 .add{
     width: 100rpx;
@@ -116,8 +113,8 @@ flex-wrap:wrap;
       .icon-shanchuguanbicha2{
         position: absolute;
         bottom:0;
-        right:1rpx;
-        top:0rpx;
+        right:6rpx;
+        top:4rpx;
         color:#666;
       }
   }
@@ -135,11 +132,11 @@ flex-wrap:wrap;
             <input name="Title"  class="input-row" placeholder="输入标题"  bindinput="inputTitleFunc"/>
         </view>
         <view class="section ">
-             <textarea class="textarea" bindblur="bindTextAreaBlur" maxlength="-1"  placeholder="输入内容" cursor-spacing='100'/>
+             <textarea class="textarea" bindinput="bindTextAreaBlur" maxlength="-1"  placeholder="输入内容" cursor-spacing='100'/>
               <view class="media-view">
-                 <view class="photo-wrap" wx:for="{{ImagesList}}"  @tap="deleteImg" data-url="{{index}}"><text class="iconfont icon-shanchuguanbicha2"></text><image src="{{item}}" mode="scaleToFill"  style="width:118rpx;height:118rpx;"></image>
+                 <view class="photo-wrap" wx:for="{{ImagesList}}"  @tap="deleteImg" data-url="{{index}}"><text class="iconfont icon-shanchuguanbicha2"></text><image src="{{item}}" mode="scaleToFill"  style="width:115rpx;height:115rpx;"></image>
                  <canvas style="width: {{cw}}px; height: {{ch}}px;margin:-2000rpx;" canvas-id="canvasBg{{index}}"></canvas></view>
-                 <view class="add"  @tap="uploadCodeImg" wx:if="{{ImagesList.length!=8}}">
+                 <view class="add"  @tap="uploadCodeImg" wx:if="{{ImagesList.length!=1}}">
                      <view class="iconfont icon-xiangji"></view>
                      <view>上传照片</view>
                  </view>
@@ -175,7 +172,7 @@ flex-wrap:wrap;
             style="width:100%;height:100%"
             mode="time"
             value="{{RemindTime}}"
-            start="00:00"
+            start="{{RemindTime}}"
             name="RemindTime"
             end="23:59"
             bindchange="bindTimeChange">
@@ -220,7 +217,7 @@ flex-wrap:wrap;
      SenderName:'',
      Remind:{ 'checked':false},
      ImagesList:[],
-     RemindTime:'08:00',
+     RemindTime:Config.nowTime(),
      RemindDate:Config.nowDate(),
      id:'',
      canvasImageList:[]
@@ -246,26 +243,18 @@ flex-wrap:wrap;
       },
       uploadCodeImg(){
         const that=this;
-        Tips.chooseImage('8', ['album', 'camera']).then((result)=>{
-          result.tempFilePaths.forEach((item,index)=>{
-            that.ImagesList.push(item);
-            this.$apply();
-              wx.showLoading({title:"压缩中..."})
-            wx.compressImage({
-              src: item, // 图片路径
-              quality: 70, // 压缩质量
-              success(res){
-                that.canvasImageList.push(res);
-                console.log(JSON.stringify(res))
-                 wx.hideLoading()
-              },
-              fail(error){
-                console.log(JSON.stringify(error))
-                 wx.hideLoading()
-              },
+        Tips.chooseImage('1', ['album']).then((result)=>{
+           if(result.tempFiles[0].size>2091008){
+            Tips.confirm('上传的图片不支持大于2M');
+            return false
 
-            })
-            
+          }
+           this.ImagesList.push(result.tempFilePaths[0]);
+           this.$apply();
+           wx.showLoading({title:"压缩中..."});
+           Tips.compressImage(50,result.tempFilePaths[0]).then((img)=>{
+              this.canvasImageList.push(img.tempFilePath);
+              wx.hideLoading()
           })
         })   
       },
@@ -300,13 +289,16 @@ flex-wrap:wrap;
         let result = await Auth.submitFiles(this.id,this.canvasImageList,'img',signID,'notice');
        }
        Tips.toast('新建成功');
-      setTimeout(()=>{ 
+        let pages = getCurrentPages();
+            let prevPage = pages[pages.length - 2]; 
         Auth.backOpener({  
             'optionId':this.id
+        },()=>{
+          prevPage.getData()
         })
-      },600)
      }
    }
+
   onLoad(option){
     this.SenderName=JSON.parse(Auth.getConfig('userInfo')).nickName;
      wepy.getSystemInfo().then(res=>{

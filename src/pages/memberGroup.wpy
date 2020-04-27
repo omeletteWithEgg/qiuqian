@@ -56,12 +56,12 @@
       }
     }
     .content-list {
-    background:#fff;
-    border-radius: 15rpx;
-    .sub-title{
-        padding:0rpx 40rpx 20rpx 40rpx;
-    }
-    .list-item{
+      background:#fff;
+      border-radius: 15rpx;
+      .sub-title{
+          padding:0rpx 40rpx 20rpx 40rpx;
+      }
+      .list-item{
         height:99rpx;
         line-height:99rpx;
         font-size:30rpx;
@@ -71,27 +71,37 @@
         &:last-child{
             border-bottom:0rpx;
         }
-    }
+      }
+}
+.modal-input{
+    display: block;
+    font-size:30rpx;
+    border:1rpx solid #999;
+    width:65%;
+    margin:0rpx auto;
+    border-radius:10rpx;
+    height:70rpx;
+    line-height:70rpx;
+    padding:0rpx 10rpx;
 }
 </style>
 <template>
 <view>
     <scroll-view scroll-y bindscrolltolower="scrollHandler">
-      <form class="search-form"><input type="text"  bindblur="bindblurFunc" name="search" placeholder="搜索" form-type="submit" confirm-type="search"></input></form>
+      <form class="search-form"><input type="text"  bindinput="bindblurFunc" name="search" placeholder="搜索" form-type="submit" confirm-type="search"></input></form>
         <view class="list-view" wx:if="{{memberList.length>0}}">
             <view wx:for="{{memberList}}" class="flex-form">
-                <view @tap='toRecordFunc' data-id="{{index}}">
+                <view data-id="{{index}}">
                     <image type="scaleToFill" style="width:60rpx;height:60rpx;border-radius:100%;margin:0 20rpx;vertical-align:middle;" src="{{item.avatarUrl}}"></image> 
                     <text class="user">{{item.SignName}}<text wx:if="{{item.OpenID==creater}}" class="btn-mini">自己</text></text> 
                 </view>
-                <view wx:if="{{item.OpenID!=creater}}" class="iconfont icon-Group-" data-id="{{index}}" @tap="commentBntFunc"></view>
+                <view wx:if="{{item.OpenID!=option.openId&&item.OpenID!=creater}}" class="iconfont icon-Group-" data-id="{{index}}" @tap="commentBntFunc"></view>
                 
             </view>
               <view class='sub-title' wx:if="{{loadMore}}">{{loadMoreText}}</view>
               
         </view>
         <view class='sub-title' wx:elseif="{{memberList.length==0}}">暂无更多数据</view>
-         <!-- <view class="sub-title" wx:elseif="{{memberList.length==0}}">还没有人参与该签到，参与了签到的人才会显示，快去邀请小伙 伴来参加吧～</view> -->
     </scroll-view>
          <blackListModal 
         modaltitle="提示"
@@ -101,9 +111,20 @@
          modalStyle="bottom:35%;top:35%;"
         @confirmFunc.user="modalClick" >
         <view slot="content" class="content">
-           <text>加入黑名单后，该用户的所有签到信息将被删除，且此用户将无法再参与本签到，确认要把【{{userNickName}}】加入黑名单吗？</text>
+          加入黑名单后，该用户的所有签到信息将被删除，且此用户将无法再参与本签到，确认要把【{{userNickName}}】加入黑名单吗？
          </view>
         </blackListModal>
+        <modalEdit 
+        :modalshow.sync="editModalshow"
+            righttext="确定"
+            lefttext="取消"
+            modaltitle="修改签到名字"
+             modalStyle="bottom:35%;top:35%;"
+            @confirmFunc.user="editConfirmFunc">
+            <view slot="content" class="content-list">
+                <input type="text" @blur="editInputFunc"  value="{{editValue}}" placeholder="请输入需要修改的名字" class='modal-input'></input>
+            </view>
+        </modalEdit>
         <turnModal 
             :modalshow.sync="turnModelShow"
             :titleshow="hidden"
@@ -129,48 +150,58 @@
     components = {
       blackListModal:modal,
       turnModal:modal,
+      modalEdit:modal
     }
     data={
-        optionId:'',
-        eId:'',
+        option:'',
+        hidden:false,
         pageIndex:1,
         modalList:[],
         userNickName:'',
         searchValue:'',
-        firstInit:false,
-        hidden:false,
-        // rightbtnshow:false,
         turnModelShow:false,
+        editModalshow:false,
         blackListModalShow:false,
-        loadMoreShow:true,
         hasMore:true,
+        editValue:'',
         loadMoreText:'加载中...',
-        showMore:true,
         creater:Auth.getConfig('openId'),
         memberList:[]
     }
-
+    staticData={
+       eId:'',
+    }
     methods = {
-       commentBntFunc(e){
-         this.eId=e.currentTarget.dataset.id;
-          this.userNickName=this.memberList[this.eId].SignName;
-          let userType=this.memberList[this.eId].UserType;
-          if(this.memberList[this.eId].IsBlackList==false&&userType=='1'){
-            this.modalList=[{'text':'设为管理员'},{'text':'加入黑名单'}];
-          }else if(this.memberList[this.eId].IsBlackList==true&&userType=='1'){
-            this.modalList=[{'text':'设为管理员'},{'text':'取消黑名单'}];
+      async editConfirmFunc(){
+        const res = await Config.setMemberName('group/SetSignName?GroupID='+this.option.id+'&OpenID='+this.memberList[this.staticData.eId].OpenID+'&SignName='+this.editValue)
+        if(!res) return
+        Tips.toast('设置成功','none');
+        this.editModalshow = false;
+        this.$apply()
+      },
+      editInputFunc(e){
+        this.editValue=e.detail.value
+      },
+      commentBntFunc(e){
+          this.staticData.eId=e.currentTarget.dataset.id;
+          this.userNickName=this.memberList[this.staticData.eId].SignName;
+          let userType=this.memberList[this.staticData.eId].UserType;
+          if(this.memberList[this.staticData.eId].IsBlackList==false&&userType=='1'){
+            this.modalList=[{'text':'设为管理员'},{'text':'加入黑名单'},{'text':'修改签到名字'}];
+          }else if(this.memberList[this.staticData.eId].IsBlackList==true){
+            this.modalList=[{'text':'取消黑名单'},{'text':'修改签到名字'}];
 
-          }else if(this.memberList[this.eId].IsBlackList==true&&userType=='2'){
-            this.modalList=[{'text':'取消管理员身份'},{'text':'取消黑名单'}];
+          }else if(this.memberList[this.staticData.eId].IsBlackList==true&&userType=='2'){
+            this.modalList=[{'text':'取消管理员身份'},{'text':'取消黑名单'},{'text':'修改签到名字'}];
 
-          }else if(this.memberList[this.eId].IsBlackList==false&&userType=='2'){
-            this.modalList=[{'text':'取消管理员身份'},{'text':'加入黑名单'}];
+          }else if(this.memberList[this.staticData.eId].IsBlackList==false&&userType=='2'){
+            this.modalList=[{'text':'取消管理员身份'},{'text':'加入黑名单'},{'text':'修改签到名字'}];
           }
           this.turnModelShow=true;
+          this.$apply()
           //这里需要先查询成员是否是管理员，如果是管理员，则显示’取消管理员身份‘，'加入黑名单'按钮，否则显示'设为管理员','加入黑名单' 
         },
         bindblurFunc(e){
-          this.firstInit=true;
           this.searchValue=e.detail.value;
           this.memberList=[];
           this.loadMore=true;
@@ -184,76 +215,85 @@
           if(text=='加入黑名单'){//加入黑名单
             this.blackListModalShow=true;
           }else if(text=='取消黑名单'){
-             let res=await Config.blackList('group/BlackList?GroupID='+this.optionId+'&OpenID='+this.memberList[this.eId].OpenID+'&Operate=2&AdminOpenID='+Auth.getConfig('openId'));
-              this.blackListModalShow=false;
-              this.memberList[this.eId].IsBlackList=false;
-              console.log(JSON.stringify(res));
-              Tips.toast('取消成功');
+            const res = await Config.blackList('group/BlackList?GroupID='+this.option.id+'&OpenID='+this.memberList[this.staticData.eId].OpenID+'&Operate=2&AdminOpenID='+Auth.getConfig('openId'));
+            if(!res) return
+           this.blackListModalShow=false;
+            this.memberList[this.staticData.eId].IsBlackList=false;
+            this.memberList.splice(this.staticData.eId,1)
+            Tips.toast('取消成功');
           }else if(text=='取消管理员身份'){
-            await Config.setManager('group/setAdmin?GroupID='+this.optionId+'&OpenID='+this.memberList[this.eId].OpenID+'&Operate=0&AdminOpenID'+Auth.getConfig('openId'));
-            this.memberList[this.eId].UserType=1;
+            const res = await Config.setManager('group/setAdmin?GroupID='+this.option.id+'&OpenID='+this.memberList[this.staticData.eId].OpenID+'&Operate=0&AdminOpenID='+Auth.getConfig('openId'));
+            if(!res) return
+            
+            this.memberList[this.staticData.eId].UserType=1;
              Tips.toast('取消成功');
 
           }else if(text=='设为管理员'){//设为管理员
-            await Config.setManager('group/setAdmin?GroupID='+this.optionId+'&OpenID='+this.memberList[this.eId].OpenID+'&Operate=1&AdminOpenID='+Auth.getConfig('openId'));
-            this.memberList[this.eId].UserType=2;
+            const res = await Config.setManager('group/setAdmin?GroupID='+this.option.id+'&OpenID='+this.memberList[this.staticData.eId].OpenID+'&Operate=1&AdminOpenID='+Auth.getConfig('openId'));
+            if(!res) return
+            
+            this.memberList[this.staticData.eId].UserType=2;
              Tips.toast('设置成功');
+          }else if(text=='修改签到名字'){
+            this.editModalshow = true
+    
           };
-         
+          
+  
            this.$apply()
+           
         },
-        toRecordFunc(e){
-          let index=e.currentTarget.dataset.id;
-          let creater=Auth.getConfig('openId');
-          let isManager=this.memberList[index].isManager||creater==this.memberList[index].OpenID;
-           this.$navigate(url+'?id='+this.optionId+'&isManager='+isManager+'&avatar='+this.memberList[index].avatarUrl+'&nickName='+this.memberList[index].SignName+'&openId='+this.memberList[index].OpenID)
-        },
-        showModel(){
-            this.modalShow=true;
-        },
+        
         searchSubmit(e){
            this.initData(e.detail.value)
         },
-      
        async modalClick(){
           //加入黑名单
-          let res=await Config.blackList('group/BlackList?GroupID='+this.optionId+'&OpenID='+this.memberList[this.eId].OpenID+'&Operate=1&AdminOpenID='+Auth.getConfig('openId'));
-          this.blackListModalShow=false;
-          this.memberList[this.eId].IsBlackList=true;
-          console.log(JSON.stringify(res));
-          Tips.toast(res,'none');
+          let res=await Config.blackList('group/BlackList?GroupID='+this.option.id+'&OpenID='+this.memberList[this.staticData.eId].OpenID+'&Operate=1&AdminOpenID='+Auth.getConfig('openId'));
+            if(!res) return
+
+         this.blackListModalShow=false;
+          this.memberList[this.staticData.eId].IsBlackList=true;
+          Tips.toast('设置成功','none');
           this.$apply()
         },
         scrollHandler(e){
-            console.log(e);
             this.loadMore=true;
             if(this.hasMore==false)return;
             this.pageIndex+=1;
-              this.loadMoreShow=true;
               this.initData({});
-            this.$apply();
         },
        
     }
-
+     onReachBottom(e){
+         if(this.hasMore==false)return;
+          this.loadMoreText='加载中...';
+          this.pageIndex+=1;
+          this.initData();
+          this.$apply()
+      }
     async initData(value){
         let param={
-            'GroupID':this.optionId,
+            'GroupID':this.option.id,
             'type':3,
             'pageIndex':this.pageIndex,
             'pageSize':10
         }
         param=Object.assign({},param,value);
         let res=await Config.myUsers(param);
-         if(res.AllUsers.length==0){
-          this.hasMore=false;
-          this.loadMoreText='暂无更多数据';
-        };
+         if(!res){
+            this.pageIndex--;
+            return
+        }
         if(this.pageIndex==1){
           this.memberList=res.AllUsers;
         }else{
-          this.memberList.concat(res.AllUsers);
+          this.memberList=[...this.memberList,...res.AllUsers];
         }
+         if(res.AllUsers.length<param.pageSize){
+          this.hasMore=false;
+          this.loadMoreText='暂无更多数据';
+        };
         this.$apply()
     }
     onShareAppMessage(res) {
@@ -267,7 +307,7 @@
       }
    }
     onLoad(option){
-        this.optionId=option.id;
+        this.option=option;
         this.initData({})
     }
 }

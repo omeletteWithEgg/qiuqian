@@ -2,12 +2,23 @@
   page>view{
     height: 100%
   }
+  .title{
+    padding:0 30rpx;text-align: center;margin: 50% auto;
+    >.info{
+      padding-bottom:30rpx
+    }
+    .sub-title{
+      padding-bottom: 0rpx;
+    }
+  }
   scroll-view{
     height:100%
   }
  .blank-center{
    height: 100%;
    padding-top:50%;
+   text-align: center;
+   color:#666;
    >view{
      width:100%
    }
@@ -62,6 +73,7 @@
   }
 </style>
 <template>
+<view>
 <view wx:if="{{isLoaded}}">
   <view class="container" wx:if="{{list.length>0}}" >
        <repeat for="{{list}}" key="index" index="index" item="item">
@@ -83,7 +95,7 @@
           @deleteItem.user="deleteItem"
           ></indexList>
        </repeat>
-        <view class='sub-title no-data' wx:if="{{loadMore}}">{{loadMoreText}}</view>
+        <view class='sub-title no-data' >{{loadMoreText}}</view>
        <modal modaltitle="提示"
             :modalshow.sync="modalshow"
             :righttext.sync="righttext"
@@ -103,10 +115,20 @@
             </view>
         </modal>
   </view>
-  <view  class="blank-center" wx:else>
+
+  <view  class="blank-center" wx:if="{{isLoaded&&!failLoad&&list.length==0}}">
      <view class="sub-title">还没有创建或是参与过任何签到</view>
-      <button class="btn-large" @tap="createNew">创建一个新的签到</button>
+      <button class="btn-large " @tap="createNew">创建一个新的签到</button>
   </view>
+</view>
+<view class="blank-center" wx:if="{{failLoad}}">加载失败...下拉页面重新加载</view>
+  <!-- <view class="title"  wx:if="{{notLogin}}">
+     <view class="info">每日膳膳签小程序是一款签到打卡的小程序，可以创建签到，邀请好友加入签到，共同进行图文分享打卡，评论互动</view>
+
+     <view class="sub-title">您还未授权登录每日膳膳签小程序</view>
+     <view class="sub-title">去授权登录，就能与更多人一起签到打卡，完成每日目标，参与签到评论，点赞等更多功能</view>
+
+  </view> -->
 </view>
 </template>
 <script>
@@ -127,10 +149,10 @@
       modal:modal
     }
     data = {
-      loadMore:false,
       hasMore:true,
+      failLoad:false,
       isLoaded:false,
-      loadMoreText:'加载中...',
+      loadMoreText:'',
       lefttext:'取消',
       righttext:'确定',
       valiCode:'',
@@ -141,6 +163,7 @@
       deleteIndex:'',
       deleteTyep:'',
       modalshow:false,
+      notLogin:true,
       list: [ ]
     }
     methods ={
@@ -148,7 +171,11 @@
          this.valiCode=e.detail.value
       },
       goDetail(msg){
+        if(!this.notLogin){
          this.$navigate('./signItemDetail?GroupID='+msg.id+'&status='+msg.status+'&signTimes='+this.list[msg.index].SignTimes+'&isManager='+this.list[msg.index].IsManager)
+        }else{
+          this.$navigate('/pages/login')
+        }
       },
       async deleteItem(id){
         this.deleteIndex= id.index;
@@ -190,21 +217,26 @@
           if(this.valiCode==''){
             Tips.toast('请输入验证码','none');
             return false;
-          }
-          this.list.forEach(async (item,index) => {
-            if(item.GroupID==this.deleteId){
-              let url='group/delete?GroupID='+this.deleteId+'&code='+this.valiCode;
-              let res= await Config.deleteGroup(url);
-              if(res){
-                this.modalshow=false;
-                Tips.toast("删除成功",'success');
-                this.list.splice(index,1);
-                this.$apply()
-              }else{
-                Tips.toast("删除失败",'none')
+          }else if(this.valiCode!=this.valiBtnText){
+             Tips.toast('验证码输入错误','none');
+            return false;
+          }else{
+
+            this.list.forEach(async (item,index) => {
+              if(item.GroupID==this.deleteId){
+                let url='group/delete?GroupID='+this.deleteId+'&code='+this.valiCode;
+                let res= await Config.deleteGroup(url);
+                if(res){
+                  this.modalshow=false;
+                  Tips.toast("删除成功",'success');
+                  this.list.splice(index,1);
+                  this.$apply()
+                }else{
+                  Tips.toast("删除失败",'none')
+                }
               }
-            }
-          });
+            });
+          }
         }else{
             this.list.forEach(async (item,index) => {
             if(item.GroupID==this.deleteId){
@@ -240,23 +272,64 @@
           });
         }
         
-      }
+      },
+     
     }
      onPullDownRefresh(e){
         this.pageIndex=1;
         this.hasMore=true;
-        this.getData();
-          this.$apply()
+        if(Object.keys(Auth.getConfig('userInfo')).length!=0){
+            this.getData();
+        }else{
+            this.getAllList()
+        }
+        this.$apply()
         wx.stopPullDownRefresh();
+        
       }
       onReachBottom(e){
          if(this.hasMore==false)return;
-          this.loadMore=true;
           this.loadMoreText='加载中...';
           this.pageIndex+=1;
-          this.getData();
+          if(Object.keys(Auth.getConfig('userInfo')).length==0){
+            this.getAllList()
+          }else{
+            this.getData();
+          }
           this.$apply()
       }
+    async getAllList(){
+      let params={
+        'type':3,
+        'pageIndex':this.pageIndex,
+        'pageSize':10
+      }
+      let data=await Config.allGroup(params);
+      this.isLoaded=true;
+      if(!data||data.serverCode){
+        this.failLoad=true;
+        this.pageIndex--;
+        return
+      }else{
+        this.failLoad=false;
+
+      }
+      if(data.Count==0){
+        this.hasMore=false;
+        this.loadMoreText='暂无更多数据';
+        this.$apply();
+        return
+      };
+      if(this.pageIndex==1){
+        this.list = data.AllGroups;
+      }else{
+        this.list=this.list.concat(data.AllGroups);
+      }
+      this.list.forEach((item)=>{
+        this.methods.calcStatus(item);
+      })
+      this.$apply();
+    }
     async getData(){
       let params={
         'OpenID':Auth.getConfig('openId')?Auth.getConfig('openId'):"",
@@ -266,15 +339,24 @@
       let data=await Config.myGroup(params);
       this.isLoaded=true;
       Tips.loaded();
-       if(data.Groups.length==0){
+      if(data=='-1'){
+        Tips.confirm('您的账号已被管理员删除，需要重新进行授权才可正常使用该小程序的全部功能').then(()=>{
+          this.$navigate('./login');
+          return
+        })
+      }else if(!data||data.serverCode){
+        this.failLoad=true
+        this.pageIndex--;
+        return
+      }
+      if(data.Groups.length<10){
         this.hasMore=false;
         this.loadMoreText='暂无更多数据';
-        return
       };
       if(this.pageIndex==1){
         this.list = data.Groups;
       }else{
-        this.list=this.list.concat(data.Groups);
+        this.list=[...this.list,...data.Groups];
       }
       this.list.forEach((item)=>{
         this.methods.calcStatus(item);
@@ -282,32 +364,35 @@
       this.$apply();
     }
     onShow(){
-     this.pageIndex=1;
+      // Tips.loaded()
+      // this.isLoaded=false;
+      
+    //  this.pageIndex=1;
+    //  this.list=[];
       if(Object.keys(Auth.getConfig('userInfo')).length!=0){
-        console.log("跳转--66666-"+(wepy.$instance.globalData.scene==true||this.scene==true))
-        if(wepy.$instance.globalData.scene==true||this.scene==true){
-          this.$navigate(`./signItemDetail?GroupID=${this.optionId}`)
-        }else{
-          this.getData();
+          // this.getData();
+           this.notLogin=false;
            Auth.setMessageCount();//获取未读消息数量
-        }
+      }else{
+        this.getAllList()
+        this.notLogin=true
       }
     }
     onHide(){
-      wepy.$instance.globalData.scene=false;
       this.scene=false;
     }
     onLoad(Option){
       Tips.loading();
-        Option.id?this.optionId=Option.id:this.optionId=wepy.$instance.globalData.sceneGroupId;//分享的小组ID
-        console.log('8989===='+JSON.stringify(wepy.$instance.globalData.getAuthFn))
-      if(Object.keys(wepy.$instance.globalData.getAuthFn).length==0||!wepy.$instance.globalData.getAuthFn){
-        // wepy.$instance.getUserInfo()
-      }else{
-         console.log("index--onLoad---"+(Option.scene=='true'||wepy.$instance.globalData.scene==true))
-       if(Option.scene=='true'||wepy.$instance.globalData.scene==true){
-          this.scene=true
-       }
+        Option.id?this.optionId=Option.id:this.optionId=wepy.$instance.globalData.query.id;//分享的小组ID
+      if( wepy.$instance.globalData.getAuthFn!=true){
+         console.log('before--index--onload1')
+        wepy.$instance.getUserInfo().then(()=>{
+          console.log('index--onload1')
+        })
+      }
+      if(Object.keys(Auth.getConfig('userInfo')).length!=0){
+        this.getData();
+        // this.notLogin=false;
       }
     }
   }

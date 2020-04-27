@@ -2,14 +2,14 @@
     <view>
         <view class="top-content ">
             <view>
-              <image style="width:100rpx;height:100rpx;border-raidius:100%;display:inline-block;vertical-align:middle" src="{{userAvatar}}"></image>
+              <image style="width:100rpx;height:100rpx;border-raidius:100%;display:inline-block;vertical-align:middle" src="{{userAvatar}}" ></image>
               <view class="info-content">
                 <view  class="nickname">{{userName}}</view>
-                <!-- <text class='user-id'>ID:{{userId}}</text> -->
               </view>
             </view>
             <view class="edit-btn">
-              <button class="btn btn-medium"  @tap="editInfo">编辑</button>
+              <button class="btn btn-medium"  @tap="editInfo" wx:if="{{ifLogin}}">编辑</button>
+              <button class="btn btn-medium"  @tap="login" wx:else>登录</button>
             </view>
         </view>
         <view class="middle-content">
@@ -23,7 +23,7 @@
             </view>
             <view class="full-row">
                 <view class="round-tab" >
-                <view  @tap="contactUs"><view class="iconfont icon-dianhua"></view>联系客服</view>
+                <!-- <view  @tap="contactUs"><view class="iconfont icon-dianhua"></view>联系客服</view> -->
                 </view>
             </view>
         </view>
@@ -41,28 +41,42 @@ export default class CreateNewSign extends wepy.page  {
     }
 
     data = {
-      userAvatar:'',
+      userAvatar:'../images/defaultAvatar@3x.png',
       userName:'',
-      messageCount:''
+      messageCount:'',
+      ifLogin:false
     }
     methods = {
         message(){
+          if(Object.keys(Auth.getConfig('userInfo')).length==0){
+             this.$navigate('./login')
+          }else{
             this.$navigate('./contactUs?count='+JSON.stringify(this.messageCount))
+
+          }
         },
         connect(){
-           this.$navigate('./connectProgram')
+          this.$navigate('./conncetMiniProgram')
+
         },
         contactUs(){
            Tips.toast('敬请期待','none')
         },
         myInfo(){
-            Tips.toast('敬请期待','none')
+           if(Object.keys(Auth.getConfig('userInfo')).length==0){
+             this.$navigate('./login')
+          }else{
+          this.$navigate('./myInfo?userName='+this.userName+'&avatarUrl='+this.userAvatar)
+          }
         },
         helpCenter(){
-           this.$navigate('./helpCenter')
+          this.$navigate('./helpCenter')
         },
         editInfo(){
            this.$navigate('./editInfo')
+        },
+        login(){
+          this.$navigate('./login')
         },
     }
      onPullDownRefresh(e){
@@ -71,31 +85,34 @@ export default class CreateNewSign extends wepy.page  {
       }
     async loadInfo(){
        this.messageCount=await Auth.setMessageCount();//获取未读消息数量
-        let userInfo =await Config.getUserInfo(Auth.getConfig('openId'));
-        this.userAvatar=userInfo.avatarUrl;
-        Auth.setConfig("avatarUrl",this.userAvatar);
-        this.userName=userInfo.NickName;
-        this.$apply()
+       if(this.userName=='未登录'||this.userName==''){
+         Auth.getConfig('signName')?this.userName=Auth.getConfig('signName'):this.userName=JSON.parse(Auth.getConfig('userInfo')).nickName
+       }
+  
+      this.userAvatar=Auth.getConfig("avatarUrl");
+      this.$apply()
     }
-
-     onShow(){
-        
+    onShow(){  
+      if(Object.keys(Auth.getConfig('userInfo')).length!=0){
+        if(this.ifLogin==false){
+          this.ifLogin=true;
+        }
         this.loadInfo();
+      }
     } 
-    onShareAppMessage(res) {
-      if (res.from === 'button') {
-        // 来自页面内转发按钮
-        console.log(res.target)
-      }
-      return {
-        title: '每日膳膳签小程序',
-        path: '/page/index'
-      }
-   }
-   onLoad(){
+   
+   async onLoad(){
      
+      if(Object.keys(Auth.getConfig('userInfo')).length!=0){
+        this.ifLogin=true;
+        let userInfo =await Config.getUserInfo(Auth.getConfig('openId'));
+        Auth.setConfig("avatarUrl",userInfo.avatarUrl);
+        this.$apply()
+      }else{
+        this.userName='未登录'
+      }
      wepy.showShareMenu({
-        withShareTicket: true
+        withShareTicket: false
       })
    }
 }

@@ -97,14 +97,10 @@
           </checkbox-group>
         </view>
       </block>
-       <!-- <view class="section " wx:if="{{BMI>0}}">
-          <view class="sub-title">BMI值</view>
-            <input class="input-row" type="digit" placeholder="请输入BMI值" bindinput='BMIinput'></input>
-        </view> -->
     </view>
           
     <text class="sub-title rules">确认即表示已同意《微信公众平台服务协议》</text>
-    <button class="btn-large" form-type="submit">确认</button>
+    <button class="btn-large" form-type="submit" @tap="subscribeMsg">确认</button>
   </form>
   <sucessModal 
     modaltitle="参与成功"
@@ -159,7 +155,10 @@
       this.params[name]=e.detail.value;
        
      },
-    
+    subscribeMsg(){
+        const tmplIds = ['pKLz6zw2e7NDLx-s-arq4iivzNo9IypdU5r_dGo7xvU'];
+        Auth.subscribeMessage(tmplIds,['6'])
+     },
      heightinput(e){
       this.params['Height']=parseFloat(e.detail.value);
      },
@@ -182,43 +181,11 @@
         this.sucessModalShow=false;
          let pages = getCurrentPages();
         let prevPage = pages[pages.length - 2]; 
-        setTimeout(()=>{
           Auth.backOpener({},()=>{
              prevPage.initData();
           })
-        },500)
-
-        
       }
    }
-    // validate(){
-    //   let reg =/^[+]?[0-9]*\d(\.\d+)?$/;
-    //   for(var i in this.data.params){
-    //     let value=this.data.params[i];
-    //     console.log(value)
-    //     if(Validate.optional(value)){
-    //       Tips.toast('报名信息不支持为空','none');
-    //       return false
-    //     }else if(this.data.params['BMI']&&this.BMI>0&&!reg.test(this.params.BMI)){
-    //       Tips.toast('BMI值需要为数字','none');
-    //       return false
-    //     }else if(this.height==true&&!reg.test(this.params.Height)){
-    //       Tips.toast('身高需要为数字','none');
-    //       return false
-    //     }else if(this.weight==true&&!reg.test(this.params.Weight)){
-    //       Tips.toast('体重需要为数字','none');
-    //       return false
-    //     }else if(this.age==true&&!reg.test(this.params.Age)){
-    //       Tips.toast('年龄需要为数字','none');
-    //       return false
-    //     }else if(this.phone==true&&!Validate.tel(this.params.Phone)){
-    //       Tips.toast('请输入正确的手机号','none');
-    //       return false
-    //     }else{
-    //      return true
-    //    }
-    //   }
-    // } 
     async ensure(event){
       let reg =/^[+]?[0-9]*\d(\.\d+)?$/;
       for(var i in this.data.params){
@@ -243,17 +210,23 @@
       }
       let params={
         'OpenID':Auth.getConfig('openId'),
-        'avatarUrl':JSON.parse(Auth.getConfig('userInfo')).avatarUrl,
+        'avatarUrl':Auth.getConfig('avatarUrl'),
         'NickName':JSON.parse(Auth.getConfig('userInfo')).nickName
       };
        let newParams = Object.assign({},params,this.params);
        let res=await Config.inGroup(this.optionId,newParams);
-       if(res){
+        if(res=='-1'){
+              Tips.confirm('您的账号已被管理员删除，需要重新进行授权才可正常使用该小程序的全部功能').then(()=>{
+                this.$navigate('./login');
+                return 
+              })
+            }
+       else if(res.serverCode&&res.serverCode!='200'){
+         Tips.toast(res.message,"none");
+         return false
+       }else{
          this.sucessModalShow=true;
          this.$apply();
-       }else{
-         console.log(JSON.stringify(res))
-        //  Tips.toast('加入失败',"none")
        }
     }
     onLoad(option){

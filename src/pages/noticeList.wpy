@@ -7,13 +7,15 @@ page>view{
   .container{
     height: 100%;
     background:#f5f5f5;
-    padding-bottom:50rpx
+  }
+  .list-container{
+    padding-bottom: 130rpx
   }
   .btn-large-wrap{
       position: fixed;
-      bottom:0px;
-      left:0px;
-      right:0px;
+      bottom:40rpx;
+      left:30rpx;
+      right:30rpx;
       .btn-large{
         width:100%
       }
@@ -67,10 +69,11 @@ page>view{
 </style>
 <template>
 <view>
-  <scroll-view scroll-y class="container" wx:if="{{list.length>0}}"  >
+  <view class="container" wx:if="{{list.length>0}}"  >
+    <block class="list-container">
        <repeat for="{{list}}" key="index" index="index" item="item">
           <indexList
-          :bgImg="item.BackgroundImg"
+          :bgImg="BackgroundImg"
           :title="item.Title"
           :id="item.NoticeID"
           :index="index"
@@ -92,16 +95,17 @@ page>view{
                 <view class="sub-title">删除通知恢复，确定要删除吗？</view>
             </view>
         </modal>
+      </block>
         <view class="btn-large-wrap"  wx:if="{{isManager=='true'}}">
             <button class="btn-large" @tap="createNew">我要发布通知</button>
       </view>
    
-  </scroll-view>
+  </view>
   <view wx:else class="blank-center">
     <view>
      <view class="sub-title">还未发布任何通知</view>
-      <button wx:if="{{isManager=='true'}}" class="btn-large" @tap="createNew" style="border-radius:0">我要发布新的通知</button>
-      </view>
+     
+      <button wx:if="{{isManager=='true'}}" class="btn-large" @tap="createNew" style="border-radius:0">我要发布新的通知</button></view>
   </view>
 </view>
 </template>
@@ -126,10 +130,14 @@ page>view{
     }
     data = {
       deleteId:'',
-      optionId:'',
       isManager:false,
       modalshow:false,
       list: [],
+      BackgroundImg:''
+    }
+    staticData={
+      optionId:'',
+
     }
     methods ={
       goDetail(msg){
@@ -141,30 +149,36 @@ page>view{
         this.deleteId =id.id;
       },
       createNew(){
-        this.$navigate('./postNotice?id='+this.optionId)
+        this.$navigate('./postNotice?id='+this.staticData.optionId)
       },
-     
-     async confirmFunc(){
-        await Config.deleteNotice(this.deleteId);
-        Tips.toast('删除成功');
-        this.modalshow=false;
-        this.list.forEach((item,index)=> {
-         if(item.id===this.deleteId){
+      confirmFunc(){
+        this.list.forEach(async (item,index)=> {
+         if(item.NoticeID===this.deleteId){
+           const res = await Config.deleteNotice(this.deleteId);
+            if(!res)return
+
+            Tips.toast('删除成功');
+            this.modalshow=false;
             this.list.splice(index,1);
+            this.$apply();
          }
-         this.$apply();
       })
     }
   }
    async getData(pageIndex){
       const params={
-        'GroupID':this.optionId,
+        'GroupID':this.staticData.optionId,
       }
       let res=await Config.allNotice(params);
-      this.list = res.Notices;
-      this.list.forEach((item)=>{
+    
+      res.Notices.forEach((item)=>{
         item.OpenID==Auth.getConfig('openId')?item.deleteIconShow=true:item.deleteIconShow=false;
+        if(!Auth.getConfig('noticeBgImg')){
+          Auth.setConfig('noticeBgImg',item.BackgroundImg);
+        }
       });
+      this.BackgroundImg=Auth.getConfig('noticeBgImg');
+       this.list = res.Notices;
       this.$apply();
     }
     onShareAppMessage(res) {
@@ -177,13 +191,11 @@ page>view{
         path: '/page/index'
       }
     }
-    
-    onShow(){
-      this.getData()
-    }
+   
     onLoad(option) {
-      this.optionId=option.id;
+      this.staticData.optionId=option.id;
       this.isManager=option.isManager;
+      this.getData();
       wepy.showShareMenu({
         withShareTicket: true
       })

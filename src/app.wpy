@@ -15,13 +15,13 @@ import wepy from 'wepy'
 
 
 import 'wepy-async-function'
-
+import regeneratorRuntime from './utils/runtime'
   import Auth from './utils/auth'
   import Config from './utils/config'
   import Tips from './utils/tip'
 
 export default class extends wepy.app {
- 
+
   config = {
     pages: [
       'pages/index',
@@ -31,6 +31,7 @@ export default class extends wepy.app {
        'pages/createNewSign',
        'pages/chooseSignInfo',
        'pages/contactUs',
+       'pages/conncetMiniProgram',
 
        'pages/postMoment',
        'pages/postCommet',
@@ -50,6 +51,7 @@ export default class extends wepy.app {
        'pages/editInfo',
        'pages/settings',
        'pages/memberGroup',
+       'pages/myInfo',
        'pages/messageList'
        // 'pages/properties'
 
@@ -87,17 +89,23 @@ export default class extends wepy.app {
             selectedIconPath:'./images/custom – 3.png'
         }
       ]
+    },
+    networkTimeout: {
+      "request": 10000,
+      "downloadFile": 10000
     }
   }
   globalData = {
     auth:{},
     scene:false,
-    sceneGroupId:'',
+    query:'',
     appid: 'wx9402286955bc5ba8',
-    appsecret:'5de87a92384ae374a7f7eba482dad524',
     pixelRatio:'',
-    getAuthFn:function(){}
+    setting:{},
+    getAuthFn:false,
+    originPage:Page
   }
+
   constructor () {
     super()
     this.use('requestfix')
@@ -121,71 +129,96 @@ export default class extends wepy.app {
     })
   }
    onLaunch(option) {
-     console.log('(app---option.scene==='+JSON.stringify(option))
     if(option.scene=='1044'||option.scene=='1007'||option.scene=='1008'){
      wepy.$instance.globalData.scene=true;
-     wepy.$instance.globalData.sceneGroupId=option.query.id;//分享的小组ID
+     wepy.$instance.globalData.query=JSON.parse(option.query.item);//分享的小组ID
+
+     wepy.$instance.globalData.path=option.path;//分享的页面
     }
-   
+      // 记录原Page方法
+      // 重写Page方法
+      if(Object.keys(Auth.getConfig('userInfo')).length>0){
+        Page = (page) => {
+          Object.keys(page).forEach(function(key){
+            if(key !== 'data'){
+              let originMethod = page[key];
+              page[key] = function () {
+                let e = arguments[0];
+              
+                //给所有的点击事件增加订阅消息弹窗
+                if(!!e && !!e.type &&  e.type === 'tap'&&e.currentTarget.dataset.method!="subscribe"){
+                  const tmplIds = ['jJWub-kOO9Xccq_t1JwxHtKHsG7naTZ4dW2urSeXcfU','W3rNF7_EbeCZEHPgVBBNYnpqW0g7D_UM-BZaDzjjqaY',
+                  'zcMH8i35Xo68CpmX8Mlj0oGdebOj7Ib8HIUOPqtyHxk'];
+                  Auth.subscribeMessage(tmplIds,['1','3','7']);
+                }
+                return originMethod.call(this,...arguments)
+              }
+            }
+          });
+          return wepy.$instance.globalData.originPage(page);
+        };
+      }
+ 
       wepy.showShareMenu({
         withShareTicket: true
       });
-      try {
-        console.log('ssssssssss======'+(Object.keys(wepy.$instance.globalData.getAuthFn).length==0||!wepy.$instance.globalData.getAuthFn))
-        if(Object.keys(wepy.$instance.globalData.getAuthFn).length==0||!wepy.$instance.globalData.getAuthFn){
-
-          this.getUserInfo().then((res)=>{
-             wepy.$instance.globalData.getAuthFn=res;
-           }).catch(error=>{
-             throw error
-           })
-        }
-         
-       
-      } catch (e) {
-        throw e
-        // Do something when catch error
+      if( wepy.$instance.globalData.getAuthFn!=true){
+        this.getUserInfo().then((res)=>{
+          // if(wepy.$instance.globalData.scene==truewepy.$instance.globalData.query.id&&(wepy.$instance.globalData.setting.authSetting)['scope.userInfo']){
+          //      wx.navigateTo({
+          //         url:'/pages/signItemDetail?item='+JSON.stringify(wepy.$instance.globalData.query)
+          //       })
+          // }
+          }).catch(error=>{
+            
+            throw error
+          })
       }
   }
- 
-  onShareAppMessage(res) {
-    if (res.from === 'button') {
-    }
-    return {
-      title: '秋签小程序',
-      path: '/page/index'
-    }
-  }
+
   getUserInfo =()=>{
     return new Promise(async (resove,reject)=>{
-      console.log('getsetting执行')
-      const setting = await wepy.getSetting();
-          let arr=Object.keys(setting.authSetting);
+      wepy.$instance.globalData.setting = await wepy.getSetting();
+      console.log('getsetting执行'+JSON.stringify(wepy.$instance.globalData.setting))
+          let arr=Object.keys( wepy.$instance.globalData.setting.authSetting);
+            if(wepy.$instance.globalData.getAuthFn){
+              return
+            }
+             wepy.$instance.globalData.getAuthFn=true;
             if(arr.length>0){
-              if ((setting.authSetting)['scope.userInfo']) {
+              
+              if ((wepy.$instance.globalData.setting.authSetting)['scope.userInfo']) {
+                console.log('授权过----'+JSON.stringify( wepy.$instance.globalData.setting))
                   //授权过
-                  let userInfo =await wepy.getUserInfo();
-                  let openId = Auth.getConfig("openId");
+                  const userInfo =await wepy.getUserInfo();
+                  const openId = Auth.getConfig("openId");
                     wepy.$instance.globalData.auth=userInfo.userInfo;
+                console.log('openId----'+openId)
+                    
                     wepy.setStorageSync('userInfo', JSON.stringify(userInfo.userInfo));
                   if(!openId) {
-                    let res =await  wepy.login();
+                    const res =await  wepy.login();
+                console.log('login----'+JSON.stringify(res))
+
                     if (res.code) {
-                      let loginToken=await Config.getOpenId(res.code);//获取token，接下来获取用户微信微信,调用注册接口
-                      if (loginToken) {
+                      const loginToken=await Config.getOpenId(res.code);//获取token，接下来获取用户微信微信,调用注册接口
+                console.log('loginToken----'+JSON.stringify(loginToken))
+                     
+                     if (loginToken) {
                         Auth.setConfig("openId", loginToken.OpenID);
-                        console.log('loginToken===>>>>'+JSON.stringify(loginToken))
                         if(loginToken.userType=='-1'){
-                          wepy.$navigate('/pages/login')
+                           wx.redirectTo({
+                            url:'/pages/login'
+                          })
                           resove()
                         }
                       }
                     }
                   };
+               
                   try{
                     const session = await wepy.checkSession();
-                  }
-                  catch(error){
+                  }catch(error){
                     console.log('session过期=====》》》》》'+JSON.stringify(error))
                      let res = await wepy.login();
                       if (res.code) {
@@ -195,87 +228,23 @@ export default class extends wepy.app {
                         }
                     }
                   }
-                  wepy.switchTab ({
-                    url: '/pages/index'
-                  })
-                  resove(setting)
+                 
+                  resove( wepy.$instance.globalData.setting)
               }else{
-                console.log('login1');
-                wepy.$navigate('/pages/login')
-                resove(setting)
-              }
-            }else{//未授权
-                wx.navigateTo({
+                 wx.redirectTo({
                   url:'/pages/login'
                 })
-              resove(setting)
+                resove( wepy.$instance.globalData.setting)
+              }
+            }else{//未授权
+             console.log('未授权');
+             if(wepy.$instance.globalData.path=='pages/signItemDetail'){
+                wx.redirectTo({
+                  url:'/pages/login'
+                })
+             }
+               
             }
-        // wx.getSetting({
-        //   async  success(res){
-        //     let arr=Object.keys(res.authSetting);
-        //     if(arr.length>0){
-        //       if ((res.authSetting)['scope.userInfo']) {
-        //           //授权过
-        //           let userInfo =await wepy.getUserInfo();
-        //           let openId = Auth.getConfig("openId");
-        //           if (userInfo) {
-        //             wepy.$instance.globalData.auth=userInfo.userInfo;
-        //             wepy.setStorageSync('userInfo', JSON.stringify(userInfo.userInfo));
-        //           };
-        //           if(!openId) {
-        //             let res =await  wepy.login();
-        //             if (res.code) {
-        //               let loginToken=await Config.getOpenId(res.code);//获取token，接下来获取用户微信微信,调用注册接口
-        //               if (loginToken) {
-        //                 Auth.setConfig("openId", loginToken.OpenID);
-        //                 if(loginToken.userType=='-1'){
-        //                   wepy.$navigate('/pages/login')
-        //                   resove(res)
-        //                 }
-        //               }
-        //             }
-        //           };
-        //          const session = await wepy.checkSession();
-        //          if(!session){
-        //            let res = await wepy.login();
-        //               if (res.code) {
-        //                 let loginToken=await Config.getOpenId(res.code);
-        //                 if (loginToken) {
-        //                   Auth.setConfig("openId", loginToken.OpenID);
-        //                 }
-        //             }
-        //          }
-        //           // wepy.checkSession({
-        //           //   success:function(res){
-        //           //   },
-        //           //   fail:async function(){
-        //           //     let res = await wepy.login();
-        //           //       if (res.code) {
-        //           //         let loginToken=await Config.getOpenId(res.code);
-        //           //         if (loginToken) {
-        //           //           Auth.setConfig("openId", loginToken.OpenID);
-        //           //         }
-        //           //     }
-        //           //   }
-        //           // });
-        //             wepy.switchTab ({
-        //             url: '/pages/index'
-        //           })
-        //           resove(res)
-        //       }else{
-        //         console.log('login1');
-        //         wepy.$navigate('/pages/login')
-        //         resove(res)
-        //       }
-        //     }else{
-        //         console.log('login2');
-        //         wx.navigateTo({
-        //           url:'/pages/login?scene=${that.scene}'
-        //         })
-        //       resove(res)
-        //     }
-        //   }
-        // });
     }).catch(async (error)=>{
       console.log(JSON.stringify(error))
       if(error.errMsg=='getSetting:fail 需要重新登录'){

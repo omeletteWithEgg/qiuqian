@@ -1,0 +1,62 @@
+<style lang="less" scoped>
+.content{
+    height: 100%;
+    margin:40rpx 50rpx;
+    padding:20rpx;
+    border-radius: 20rpx;
+    background: #fff;
+
+    .sub-title{
+        text-align: left;
+        line-height: 40rpx;
+        padding-bottom:0px;
+        padding:15rpx 0rpx;
+    }
+}
+
+</style>
+<template>
+    <view class="content">
+      
+        <view>
+            1.公众号如何提交关联申请呢？
+            <view class="sub-title">
+                在微信后台的【小程序管理】界面，点击【添加】小程序需要公众号管理员扫码验证身份最后，在搜索框输入“每日膳膳签”，点击放大镜搜索，点击【保存】即可。
+            </view>
+        </view>
+         <view>
+           
+            2.关联成功之后，如何使用每日膳膳签？
+            <view class="sub-title">
+               可在你的公众号菜单栏直接显示打卡活动入口，点击即可进入，可以丰富你的菜单栏！直接在文末插入小程序卡片，更直观便捷地展示你的活动入口。
+            </view>
+        </view>
+         <view>
+            3.如何获取活动的小程序路径？
+            <view class="sub-title">
+                进入你创建的签到活动页面，点击【设置】-【接入公众号】-【一键复制小程序路径】，即可成功复制。 
+            </view>
+        </view>
+       
+         <view>
+            4.如何在文章插入小程序卡片？
+            <view class="sub-title">
+                在编辑微信文章时，推文中选择插入“小程序”，在搜索框输入“每日膳膳签”，点击右方的放大镜，即可进入“下一步”然后填写你的签到活动的“小程序路径”，最后上传一张长宽比为5:4的图片作为小程序卡片的封面
+            </view>
+        </view>
+       
+    </view>
+</template>
+<script>
+ import wepy from 'wepy'
+
+ export default class helpCenter extends wepy.page{
+    config = {
+      navigationBarTitleText: '公众号如何关联小程序'
+    }
+
+    data={
+        
+    }
+ }
+</script>

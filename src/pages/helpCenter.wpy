@@ -6,7 +6,7 @@
     border-radius: 20rpx;
     background: #fff;
     .title{
-        padding:14rpx 0rpx;
+        padding:18rpx 0rpx;
     }
     .sub-title{
         text-align: left;
@@ -15,22 +15,42 @@
         padding:15rpx 0rpx;
     }
 }
+
 </style>
 <template>
     <view class="content">
-        <scroll-view
-    scroll-y style="height:100%">
         <view class="title">
-            每日膳膳签FAQ常见问题解答
+            秋签FAQ常见问题解答
         </view>
         <view>
+            1.如何新建签到？
             <view class="sub-title">
-                问题目录
-            </view>
-            <view class="sub-title" wx:for="{{questionList}}"><text>{{index+1}}. </text><text>{{item.content}}</text> 
+                进入每日膳膳签小程序，可以在下方导航栏找到“新建签到”，点击前往新建签到页面，选择“自定义签到”，按照页面提示完成信息填写，点击“确认”即可。
             </view>
         </view>
-        </scroll-view>
+         <view>
+           
+            2.如何分享签到？
+            <view class="sub-title">
+                第一种方式：
+               进入你想分享的签到小组主页，右上角菜单栏点击“...”,在弹出来的下方菜单页中，点击“发送给朋友”即可转发。
+               第二种方式：
+               进入签到详情页，点击页面中间的最后一个"转发"按钮，选择相应的操作即可。
+            </view>
+        </view>
+         <view>
+            3.如何修改签到名字？
+            <view class="sub-title">
+                在每日膳膳签主页下方导航栏，点击“个人中心”，进入个人主页后点击“编辑”，即可在签到名字处进行修改自己的签到名字。如需修改某个签到的签到名字，进入那个签到详情页面，点击设置-签到名称。
+            </view>
+        </view>
+         <view>
+            4.如何退出已经参加的签到？
+            <view class="sub-title">
+                在签到主页会展示你已加入的签到小组，确定所需要退出的签到小组，在其右上角点击“X”即可删除并退出。
+            </view>
+        </view>
+       
     </view>
 </template>
 <script>
@@ -42,16 +62,7 @@
     }
 
     data={
-        questionList:[
-            {'content':'怎样修改自己的头像？怎样修改自己的头像？怎样修改自己的头像？'},
-            {'content':'怎样修改自己的头像怎样修改自己的头像？怎样修改自己的头像？？'},
-            {'content':'怎样修改自己的头像？'},
-            {'content':'怎样修改自己的头像？'},
-            {'content':'怎样修改自己的头像？'},
-            {'content':'怎样修改自己的头像？'},
-            {'content':'怎样修改自己的头像？'},
-            {'content':'怎样修改自己的头像？'}
-        ]
+        
     }
  }
 </script>

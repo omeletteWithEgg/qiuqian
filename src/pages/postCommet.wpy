@@ -22,14 +22,14 @@
    
 </style>
 <template>
-    <form bindsubmit="savePost" report-submit='true'>
+    <form >
         <view class="flex-form top-view">
             <button class="btn-round disabled" @tap="cancel">取消</button>
-            <button class="btn-round" form-type="submit">完成</button>
+            <button class="btn-round" @tap="savePost">完成</button>
         </view>
         <view class="content-view">
             <view class="textarea-input">
-             <textarea name="conetent" placeholder="请输入留言内容" maxlength='-1' bindinput='getContentFunc' cursor-spacing='100'/>
+             <textarea name="content" placeholder="请输入留言内容" maxlength='-1' bindinput='getContentFunc' cursor-spacing='100'/>
             </view>
         </view>
             
@@ -39,8 +39,6 @@
 <script>
  import wepy from 'wepy';
  import Auth from '../utils/auth';
-  import Comments from '../components/commets'
-
  import Config from '../utils/config';
  import Tips from '../utils/tip';
 
@@ -54,23 +52,30 @@
       openerId:'',
       type:'',
       item:'',
-      prevPageIndex:0,
       isComment:true,
       groupInfo:'',
       userInfo:''
     }
     methods = {
         async savePost(e){
+          if(this.content==''){
+            Tips.toast('请输入留言内容','none')
+            return
+          }
             let url=Config.baseUrl+'user/group/message?OpenID='+Auth.getConfig('openId')+'&GroupID='+this.openerId;
             let MessageParentContext;
             let MessageParentID;
+            let SenderNickName;
+
             let ReceiverOpenID=this.groupInfo.OpenID;
             let ReceiverNickName = this.groupInfo.NickName;
-            let SenderNickName = JSON.parse(Auth.getConfig('userInfo')).nickName
+            // let SenderNickName = JSON.parse(Auth.getConfig('userInfo')).nickName
+            this.userInfo.SignName?SenderNickName =  this.userInfo.SignName:SenderNickName=JSON.parse(Auth.getConfig('userInfo')).nickName
+
             if(this.type==1){//签到评论
                 MessageParentContext=this.groupInfo.Context;//签到的正文
                 MessageParentID=this.groupInfo.SignID;
-                this.userInfo.SignName?SenderNickName=this.userInfo.SignName:SenderNickName=this.groupInfo.NickName;
+                // this.userInfo.SignName?SenderNickName=this.userInfo.SignName:SenderNickName=JSON.parse(Auth.getConfig('userInfo')).nickName
             }else if(this.type==2){//回复，给管理员留言
                 this.groupInfo.MessageParentContext?MessageParentContext=this.groupInfo.MessageParentContext:MessageParentContext=null;
                  this.groupInfo.ReplyContext?MessageParentContext=this.groupInfo.ReplyContext:MessageParentContext=null;
@@ -78,7 +83,7 @@
                     ReceiverOpenID=this.groupInfo.OpenID;
                     ReceiverNickName = this.groupInfo.NickName
                  }else{//回复
-                    SenderNickName=this.groupInfo.ReceiverNickName;
+                    // SenderNickName=this.groupInfo.ReceiverNickName;
                      ReceiverNickName=this.groupInfo.SenderNickName;
                        ReceiverOpenID=this.groupInfo.SenderOpenID;
                  }
@@ -91,7 +96,7 @@
             }
             let params={
                 'SignID':this.groupInfo.SignID,
-                 'formId':e.detail.formId,
+                //  'formId':e.detail.formId,
                 "MessageParentID":MessageParentID,//如果是评论，值为SignID;如果是回复，值为要回复的MessageID；如果是给管理员留言或系统通知，值为0
                 "MessageParentContext":MessageParentContext,//如果是评论，值为签到的正文;如果是回复，值为要回复的消息正文；如果是给管理员留言或系统通知，值为null
                 "ReplyContext":this.content,
@@ -102,16 +107,24 @@
                 "ReceiverNickName":ReceiverNickName
             }
             let res = await Config.postComment(url,params);
-            if(this.isComment!='false'&&this.isComment!='true'){//排除管理员留言和消息回复两种情况
+            if(res=='-1'){
+              Tips.confirm('您的账号已被管理员删除，需要重新进行授权才可正常使用该小程序的全部功能').then(()=>{
+                this.$navigate('./login');
+                return
+              })
+            }
+            else if(this.isComment!='false'&&this.isComment!='true'){//排除管理员留言和消息回复两种情况
                 this.item['Messages'].push(res);
             }
             Tips.toast("操作成功",'');
-              let pages = getCurrentPages();
-	        	let prevPage = pages[pages.length - 2]; 
-            setTimeout(()=>{
-                Auth.backOpener({'groupInfo':this.item,'pageRoute':'postComment'}
-                );
-            },500)
+           
+
+              if(this.isComment=='false'){
+                 Auth.backOpener({'pageRoute':'postComment'});
+             }else{
+                Auth.backOpener({'groupInfo':this.item,'pageRoute':'postComment'});
+              }
+             
         },
         getContentFunc(e){
             this.content=e.detail.value
@@ -121,6 +134,7 @@
         }
     }
     onLoad(option){
+        console.log(option)
         this.openerId=option.id;
         this.type=option.type;
         option.groupInfo?this.item=JSON.parse(option.groupInfo):this.item='';
@@ -129,7 +143,6 @@
         this.isComment=option.isComment;
         
     }
-
 }
 
  

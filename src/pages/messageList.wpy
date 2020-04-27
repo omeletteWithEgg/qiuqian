@@ -69,7 +69,7 @@
    <scroll-view class="container"  scroll-y bindscrolltolower="scrollHandler" bindscrolltoupper="topLoad">
       <view  wx:if="{{type=='1'}}" >
         <view  wx:if="{{list.length>0}}">
-            <view class="item"  wx:for="{{list}}" wx:if="{{list.length>0}}" >
+            <view class="item"  wx:for="{{list}}" wx:if="{{list.length>0}}"  @tap="toSignDetailPage"  data-item="{{item}}">
                 <view class="tip-text">{{item.MessageDate}}</view>
                 <view class="title">{{item.GroupTitle}}</view> 
                 <view class="content">
@@ -83,20 +83,22 @@
     </view>
     <view  wx:if="{{type=='3'}}" >
         <view  wx:if="{{list.length>0}}">
-            <view class="item"  wx:for="{{list}}">
-                <view class="user-info flex-form">
-                    <view class="img-wrap"><image type="scaleToFill" style="width:64rpx;height:64rpx;border-radius:100%" src="{{item.avatarUrl}}"></image></view>
-                    <view>
-                        <view class="user-name">{{item.SenderNickName }}</view><view class="tip-text">{{item.MessageDate }}</view> 
+            <view class="item" wx:for="{{list}}" >
+                <view  @tap="toSignDetailPage" data-item="{{item}}">
+                    <view class="user-info flex-form">
+                        <view class="img-wrap"><image type="scaleToFill" style="width:64rpx;height:64rpx;border-radius:100%" src="{{item.avatarUrl}}"></image></view>
+                        <view>
+                            <view class="user-name">{{item.SenderNickName }}</view><view class="tip-text">{{item.MessageDate }}</view> 
+                        </view>
                     </view>
+                    <view class="content"><view class="sub-title" wx:if="{{item.MessageType==3}}">{{item.SenderNickName}}{{item.MessageParentContext}}</view>
+                    <view class="reply-content">{{item.ReplyContext}} <view class="sub-title" wx:if="{{item.MessageType==9}}"> {{item.SenderNickName}}{{item.ReplyContext}}</view><view class="tip-text">内容来自{{item.GroupTitle}}</view></view></view>    
                 </view>
-                <view class="content"><view class="sub-title" wx:if="{{item.MessageType==3}}">{{item.SenderNickName}}{{item.MessageParentContext}}</view>
-                 <view class="reply-content">{{item.ReplyContext}} <view class="sub-title" wx:if="{{item.MessageType==9}}"> {{item.SenderNickName}}{{item.ReplyContext}}</view><view class="tip-text">内容来自{{item.GroupTitle}}</view></view></view>    
                 <view class="button" wx:if="{{item.MessageType==3&&!item.ReplyContext}}">
-                    <button class="btn-round " @tap="agree" data-id="{{index}}"  disabled="{{item.IsReaded}}">
+                    <button class="btn-round " @tap="agree" data-id="{{index}}" data-method="subscribe" disabled="{{item.IsReaded}}">
                         {{item.agreeBtn}}
                     </button>
-                    <button class="btn-round disabled" @tap="disagree" data-id="{{index}}"  disabled="{{item.IsReaded}}">
+                    <button class="btn-round disabled" @tap="disagree" data-id="{{index}}" data-method="subscribe"  disabled="{{item.IsReaded}}">
                         {{item.disagreeBtn}}
                     </button>
                 </view>
@@ -106,7 +108,7 @@
     </view>
      <view  wx:if="{{type=='2'}}">
         <view  wx:if="{{list.length>0}}">
-            <view class="item" wx:for="{{list}}" >
+            <view class="item" wx:for="{{list}}"  @tap="toDetailPage"  data-item="{{item}}">
                 <view class="user-info flex-form">
                     <view class="img-wrap"><image type="scaleToFill" style="width:64rpx;height:64rpx;border-radius:100%;" src="{{item.avatarUrl}}"></image></view>
                     <view>
@@ -115,11 +117,11 @@
                 </view>
                 <view class="content"><view class="sub-title">{{item.ReplyContext}}</view></view> 
                 <view class="reply-content"><view class="sub-title"  wx:if="{{item.MessageParentContext&&item.MessageParentContext!='null'}}">{{item.MessageParentContext}}</view><view class="tip-text">内容来自{{item.GroupTitle}}</view></view> 
-                <view class="button align-right" >
-                    <button class="btn-round " @tap="toReply" data-id="{{index}}" >
+                <!-- <view class="button align-right" >
+                    <button class="btn-round " @tap="toReply" data-id="{{index}}" wx:if="{{(item.MessageType=='1'||item.MessageType=='2')&&(item.SenderOpenID!=item.ReceiverOpenID)}}">
                         回复
                     </button>
-                </view>
+                </view> -->
             </view>
         </view>
         <view wx:else class="sub-title no-data">暂无数据</view>
@@ -146,24 +148,52 @@
             loadMore:false,
             hasMore:true,
             pageIndex:1,
+            nowArray:[],
+            // total:'',
             type3Count:0,
             loadMoreText:'加载中...'
         };
+        staticData = {
+            userSetting:''
+        }
         methods = {
+           async toSignDetailPage(e){
+                const item = e.currentTarget.dataset['item']
+                let parm={
+                    'GroupID':item.GroupID
+                }
+               
+                const groupInfo= await Config.groupInfo(parm);
+                this.$navigate('./myRecords?id='+item.GroupID+'&signNum='+this.signNum+'&isManager=false&userInfo='+JSON.stringify(this.staticData.userSetting)+'&groupInfo='+JSON.stringify(groupInfo)+'&openId='+item.SenderOpenID+'&nickName='+item.SenderNickName+'&avatarUrl='+item.avatarUrl)
+            },
+           async toDetailPage(e){
+                const item = e.currentTarget.dataset['item']
+                const param = {
+                    'GroupID':item.GroupID,
+                    'SignID':item.SignID
+                }
+                this.staticData.userSetting=await Config.getUserSetting({'OpenID':Auth.getConfig("openId"),'GroupID':item.GroupID});
+                console.log( this.staticData.userSetting)
+
+                const res = await Config.getSignMessage(param);
+                let isManager=false;
+                if(res.OpenID==Auth.getConfig('openId')){
+                    isManager=true
+                }
+                this.$navigate('./commentDetail?groupInfo='+JSON.stringify(res)+'&id='+item.GroupID+"&isManager="+isManager+"&userInfo="+JSON.stringify(this.staticData.userSetting))
+
+            },
             toReply(e){
                 let id=e.currentTarget.dataset.id;
                 this.$navigate('./postCommet?msg='+JSON.stringify(this.list[id])+'&type=2&id='+this.list[id].GroupID+"&isComment=true");
             }, 
-            topLoad(e){
-                this.pageIndex=1;
-                this.hasMore=true;
-                this.getList();
-                this.$apply();
-            },
             async disagree(e){
                 let id=e.currentTarget.dataset.id;
-                 await Config.setResign('group/setReSignTimes?GroupID='+this.list[id].GroupID+'&MessageID='+this.list[id].MessageID+'&OpenID='+this.list[id].SenderOpenID+'&times=-1&AdminOpenID='+Auth.getConfig('openId'));
+                const res= await Config.setResign('group/setReSignTimes?GroupID='+this.list[id].GroupID+'&MessageID='+this.list[id].MessageID+'&OpenID='+this.list[id].SenderOpenID+'&times=-1&AdminOpenID='+Auth.getConfig('openId'));
+                if(!res)return
                 Tips.toast('已拒绝补签申请');
+               const tempId=['W3rNF7_EbeCZEHPgVBBNYnpqW0g7D_UM-BZaDzjjqaY'];
+                await Auth.subscribeMessage(tempId,['3'])
                 this.list[id].IsReaded=true;
                 this.list[id].disagreeBtn='已拒绝';
                 this.type3Count-=1;
@@ -173,10 +203,12 @@
             }, 
             async agree(e){
                 let id=e.currentTarget.dataset.id;
-                await Config.setResign('group/setReSignTimes?GroupID='+this.list[id].GroupID+'&MessageID='+this.list[id].MessageID+'&OpenID='+this.list[id].SenderOpenID+'&times=1&AdminOpenID='+Auth.getConfig('openId'));
+                const res = await Config.setResign('group/setReSignTimes?GroupID='+this.list[id].GroupID+'&MessageID='+this.list[id].MessageID+'&OpenID='+this.list[id].SenderOpenID+'&times=1&AdminOpenID='+Auth.getConfig('openId'));
+                if(!res)return
+                const tempId=['W3rNF7_EbeCZEHPgVBBNYnpqW0g7D_UM-BZaDzjjqaY'];
+                await Auth.subscribeMessage(tempId,['3'])
                 Tips.toast('新增成功');
                 this.agreeBtn='已同意';
-
                 this.list[id].IsReaded=true;
                 this.list[id].agreeBtn='已同意';
                 this.type3Count-=1;
@@ -188,10 +220,13 @@
                 if(this.hasMore==false)return;
                 this.pageIndex+=1;
                 this.getList();
+                this.$apply();
+
             }
         };
 
         async getList(){
+            
             let param={
               'OpenID':Auth.getConfig('openId'),
               'type':this.type,//1：系统消息 2：评论回复消息 3：审核消息
@@ -199,19 +234,12 @@
               'pageSize':10
            }
            let list = await Config.messageList(param);
-           if(list.Count==0){
-                this.hasMore=false;
-                this.loadMoreText='暂无更多数据';
-                this.$apply();
+            if(!list){
+                this.pageIndex--;
                 return
-            };
-            if(this.pageIndex==1){
-                this.list=list.Messages;
-            }else{
-                this.list=this.list.concat(list.Messages);
-            };
-            if(this.type=='3'){
-                this.list.forEach(item => {
+            }
+            if(this.type=='3'&& list.Messages.length>0){
+                list.Messages.forEach(item => {
                     if(item.MessageType==3&&item.IsReaded==false){
 
                         item.agreeBtn='同意';
@@ -219,13 +247,24 @@
                     }
                 });
             }
+           if(this.pageIndex==1){
+                this.list=list.Messages;
+            }else{
+                this.list=[...this.list,...list.Messages];
+            };
+           if(list.Count<param.pageSize){
+                this.loadMoreText='暂无更多数据';
+                this.hasMore=false;
+            };
             this.$apply()
         }
         async onLoad (p) {
             this.type=p.type;
-            this.type3Count=parseInt(p.type3Count);
+            p.type3Count?this.type3Count=parseInt(p.type3Count):this.type3Count=Auth.getConfig('type3Count');
+            //  this.total=parseInt(p.total);
             this.getList()
-         
+            this.$apply()
+            
         }
     }
 </script>

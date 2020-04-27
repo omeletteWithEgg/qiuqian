@@ -63,18 +63,14 @@
       <text class="sub-title">已选项目</text>
       <view class="form-section  ">
           <view class="section input-row">
-            <view>
               <button  wx:for="{{choosedItems}}" class="btn-mini " wx:key="{{index}}" >{{item.PropertyDescription?item.PropertyDescription:item}}</button>
-            </view>
           </view>
          
         </view>
         <text class="sub-title"> 点击选择需要填写的信息</text>
          <view class="form-section  ">
           <view class="section input-row">
-            <view >
                 <tagBtn :list.sync="tagList"  @changeBtnStatus.user="changeBtnStatus"></tagBtn>
-            </view>
           </view>
         </view>
       <text class="sub-title rules">确认即表示已同意《微信公众平台服务协议》</text>

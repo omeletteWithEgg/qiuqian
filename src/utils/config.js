@@ -1,6 +1,6 @@
 import Http from './utils'
   
-const baseUrl="https://www.qct-qiuqian.com/qiuqian/";
+const baseUrl="https://www.qct-qiuqian.com:4433/qiuqian/";
 // const baseUrl="http://www.qct-qiuqian.com:9999/qiuqian/";
 
 const registerUrl='user/register';//前端申请用户授权，如果用户允许，则调用接口注册
@@ -40,6 +40,9 @@ const deleteUserUrl='user/delete';//删除成员
 const verificationCodeUrl='group/verificationCode';//获取验证码
 const clearMsgCountUrl='user/clearMessageCount';//
 const getWXCodeUrl='group/getWXCode?GroupID=';//二维码
+const messageSubscribeUrl='user/messageSubscribe';//订阅消息
+const setMemberNameUrl = 'group/SetSignName'//设置成员签到名
+const getSignMessageUrl = 'group/getSignMessage'
 
 const getOpenId = (params) => Http.post(baseUrl +getOpenIdUrl+params );
 const register = (params) => Http.post(baseUrl +registerUrl,params );
@@ -86,6 +89,10 @@ const postFiles = (url,params) => Http.get(url ,params );
 const getWXCode = (params) => Http.get(baseUrl+getWXCodeUrl+params );
 const getMessageCount = (param) => Http.get(baseUrl+getMessageCountUrl,param );
 const clearMsgCount = (param) => Http.get(baseUrl+clearMsgCountUrl,param );
+const messageSubscribe = (param) => Http.post(baseUrl+messageSubscribeUrl,param );
+const setMemberName = (url,param) => Http.post(baseUrl+url,param );
+const getSignMessage = (param)=>Http.get(baseUrl+getSignMessageUrl,param)
+
 
 const nowDate =()=>{
     let year = new Date().getFullYear();
@@ -191,6 +198,9 @@ export default {
     nowDate,
     nowTime,
     fiveYearsLater,
-    signNumPicker
+    signNumPicker,
+    messageSubscribe,
+    setMemberName,
+    getSignMessage
   }
   

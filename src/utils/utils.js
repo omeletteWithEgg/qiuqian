@@ -10,7 +10,6 @@ export default class Http {
 
 			method = method.toUpperCase();
 			let methodHeader={};
-			// console.log(url.indexOf('user/getToken'))
 			if(url.indexOf('user/getToken')<0&&url.indexOf('user/getOpenID')<0){
 				 methodHeader = {
 					"auth":Auth.getConfig('loginToken')
@@ -21,7 +20,6 @@ export default class Http {
 			} else if (method == "GET") {
 			  methodHeader["content-type"]= 'application/json' 
 			};
-	
 			const parm = {
 				url:url,
 				method:method,
@@ -32,6 +30,7 @@ export default class Http {
 			const res = await wepy.request(parm)
 			console.log('parm-----'+JSON.stringify(parm))
 			Tips.loaded();
+			console.log('res===='+JSON.stringify(res))
 			if(this.isSuccess(res)){
 				if(res.data.Message=='已拒绝为此请求授权。'){
 					let param={
@@ -41,23 +40,26 @@ export default class Http {
 					Auth.getConfig('loginToken');	
 					Auth.setConfig('loginToken',loginToken.token);	
 				}
-				console.log(res.data||res)
-				return res.data||res
+				
+				return res.data
 			}else {
-				// wx.showModal({
-				// 	title: '提示',
-				// 	content:this.requestException(res).message,
-				// 	showCancel:false
-				//   })
-			  throw this.requestException(res);
+				// const code = res.statusCode;
+				// const serverData = res.data||res.Message;
+				// const error={};
+				// if (serverData) {
+				// 	error.serverCode = code;
+				// 	error.message = serverData;
+				// }
+				console.log('requestException===='+JSON.stringify(res.data.Message))
+				Tips.toast(res.data.Message||res.data.statusCode,'none')
+				return false
+				// return error;
 			}
 	}catch(error){
+		console.log(JSON.stringify('出错了==='+JSON.stringify(error)))
+		Tips.toast('网络不给力','none')
 		Tips.loaded();
-		// wx.showModal({
-		// 	title: '提示',
-		// 	content:error.message,
-		// 	showCancel:false
-		//   })
+		
 		}
 	}
 	 /**
@@ -65,30 +67,11 @@ export default class Http {
    */
 	static isSuccess(res){
 		const resCode = res.statusCode;
-		if (resCode !== 200) {
-		  Tips.toast(res.data.Message||res.data ,'none');
-		  
-	      return false;
-	    }else{
+		if (resCode === 200) {
 			const wxData = res.data||res;
 		
 			return (wxData && wxData.code !== 0);
 		}
-	}
-	 /**
-   * 判断请求异常
-   */
-	static requestException (res){
-		console.log('requestException===='+JSON.stringify(res))
-		const code = res.statusCode;
-		const serverData = wxData.data;
-		const error={};
-	    if (serverData) {
-	      error.serverCode = wxData.code;
-	      error.message = serverData;
-	    }
-	    return error;
-
 	}
 
 	static async get(url,data){

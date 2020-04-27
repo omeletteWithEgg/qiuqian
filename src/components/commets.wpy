@@ -55,7 +55,7 @@
            }
        }
         .btn-text{
-           font-size:24rpx;
+           font-size:26rpx;
            vertical-align:middle;
            padding-left:6rpx;
        }
@@ -283,11 +283,11 @@
                 </view>
         </deleteMsg>
         <modalEdit 
-        :modalshow.sync="editModalshow"
+            :modalshow.sync="editModalshow"
             righttext="确定"
             lefttext="取消"
             modaltitle="修改签到名字"
-             modalStyle="bottom:35%;top:35%;"
+            modalStyle="bottom:35%;top:35%;"
             @confirmFunc.user="editConfirmFunc">
             <view slot="content" class="content-list">
                 <view class="sub-title">成员名字:<text>{{userNickName}}</text></view>
@@ -447,18 +447,19 @@
       editInputFunc(e){
         this.editValue=e.detail.value
       },
-       scoreConfirmFunc(e){//评分
-       console.log(parseInt(this.scoreValue))
-       if(isNaN(this.scoreValue)){
-          Tips.toast('请输入正整数','none');
-           return false
-       }else if(parseInt(this.scoreValue)>10){
+      scoreConfirmFunc(e){//评分
+       console.log(parseInt(this.scoreValue)>10)
+       console.log(parseInt(this.scoreValue)<1)
+
+       console.log(!(/^\d+$/).test(this.scoreValue))
+
+       if(parseInt(this.scoreValue)>10){
           Tips.toast('分数需要是1-10分的整数','none');
           return false
         }else if(parseInt(this.scoreValue)<1){
           Tips.toast('分数需要是1-10分的整数','none');
           return false
-        }else if((this.scoreValue).match(/^[0-9]+\.?[0-9]+?$/)){
+        }else if(!(this.scoreValue).match(/^\d+$/)){
            Tips.toast('分数需要是1-10分的整数','none');
           return false
         }else{
@@ -478,7 +479,6 @@
     listBtnClickFunc(e){
       let listIndex = e.currentTarget.dataset.index;
       let msgId = e.currentTarget.dataset.msgid;
-      console.log(JSON.stringify(e.currentTarget.dataset))
       this.$emit('listBtnClickFunc',{'id':listIndex,'msg':this.content,'msgId':msgId})
     },
     async modalTipConfirmFunc(){

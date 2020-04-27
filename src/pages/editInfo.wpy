@@ -108,11 +108,11 @@
 </style>
 <template>
 <scroll-view scroll-y="true" style="height:100%">
-    <form class="content-wrap" bindsubmit="save" report-submit='true'>
+    <form class="content-wrap" bindsubmit="save" report-submit='true' wx:if="isInit">
             <view class="form-section input-row  flex-form" >
                 <view class="section-title">修改头像</view>
                 <view class="img-wrap"  @tap="changeAvatar">
-                <image  style="width:80rpx;height:80rpx;border-radius:100%;display:block;margin-right:50rpx"  mode="scaleToFill" src="{{avatar[0]}}" > </image>
+                <image  style="width:80rpx;height:80rpx;border-radius:100%;display:block;margin-right:50rpx"  mode="scaleToFill" src="{{avatar}}" > </image>
                   <view class=" iconfont icon-jiantou"></view>
                 </view>
               </view>
@@ -123,12 +123,7 @@
                     <input name="SignName" value="{{info.SignName}}" class="input-row" placeholder="输入签到的名字" bindinput="fillSignName" />
               </view>
           </view>
-            <!-- <view class="section input-row  flex-form" >
-              <view class="section-title">电话</view>
-              <view class="input-row-right">
-                    <input name="phoneNum" value="{{phoneNum}}" class="input-row" placeholder="输入电话" bindinput="fillphoneNum" />
-              </view>
-          </view> -->
+          
           </view>
           <view class="set-text">设置签到提醒（必须坚持签到才会收到提醒哦）</view>
            <view class="form-section  " >
@@ -158,7 +153,7 @@
                 <view class="form-row flex-form">
                   <button @tap="chooseNoticeDate"  wx:for="{{repeatNum}}" class="btn-mini {{item.btnStatus}}" data-id="{{item.id}}">{{item.text}}</button>
                 </view>
-              <view class=" form-row section-title" @tap="openNotice">关注「每日膳膳签」公众号接收提醒，点击查看</view>
+              <view class=" form-row section-title" @tap="openNotice">关注「广州秋草堂」公众号接收提醒，点击查看</view>
             </view>
           </view>
            <view class="form-section input-row flex-form">
@@ -171,7 +166,7 @@
        <!-- </view> -->
         <!-- </view> -->
       <view class="sub-text rules">确认即表示已同意《微信公众平台服务协议》</view>
-       <button class="btn-large" form-type="submit">保存</button>
+       <button class="btn-large" form-type="submit" >保存</button>
     </form>
     
 </scroll-view>
@@ -192,11 +187,9 @@
      info:{},
      userInfo:{},
      callTime:'',
-    //  signName:'',
-     avatar:[],
+     isInit:false,
+     avatar:'',
      changeAvatarUrl:false,
-    //  ifSignNotice:true,
-    //  ifCommentNotice:true,
     chooseIcon:[{
       'checked':true,
       'name':"ifSignNotice"
@@ -227,8 +220,8 @@
           }
         })
      },
+   
      async save(form){
-       console.log(JSON.stringify(form)+'-----表单')
        let params={
          OpenID:Auth.getConfig("openId"),
          SignName:this.info.SignName,
@@ -237,70 +230,58 @@
          RemindDay:this.selectedReaptNum.join(''),
          RemindComment:this.chooseIcon[1].checked
        };
-        await Config.userSetting(params);
+        const res = await Config.userSetting(params);
+        if( this.changeAvatarUrl!=true){
+          if(!res)return
+          Tips.toast('修改成功');
+        }
+
         if( this.changeAvatarUrl==true){
           let that=this;
           await   new Promise(resolve => {
               wx.uploadFile({
                   url:Config.baseUrl+'user/img?OpenID='+Auth.getConfig('openId'),
-                  filePath: that.avatar[0],
+                  filePath: that.avatar,
                   name: 'files[]',
                   success: (res) => {
                     resolve(res)
                    
                   }
               });
-          }).then(async (res)=>{
-          const data = JSON.parse(res.data);
+          }).then( (res)=>{
+             const pages = getCurrentPages();
+            const prevPage = pages[pages.length - 2]; 
+            const data = JSON.parse(res.data);
                 this.userInfo.avatarUrl=data;
-                console.log("x修改成功")
                 Auth.setConfig('userInfo',JSON.stringify(this.userInfo));
                 Auth.setConfig('signName',this.info.SignName);
                 Auth.setConfig('avatarUrl',data);
-                this.$apply();
+                prevPage.userAvatar=data;
+                 Tips.toast('修改成功');
+              
+               Auth.backOpener()
+                this.$apply({});
             
-          }).then(()=>{
-               Tips.toast('修改成功');
-               Auth.backOpener({})
-          });
+          })
       
         }
+       
      },
 
      changeAvatar(event){
-      let itemList= ['拍照', '相册上传'];
-      const that=this;
-       wx.showActionSheet({
-        itemList: itemList,
-         success(res) {
-          // const url= 'http://www.qct-qiuqian.com:9999/qiuqian/user/img?OpenID='+Auth.getConfig('openId');
-         
-          if(res.tapIndex==1){
-            Tips.chooseImage('1',['album']).then(async (res)=>{
-              that.avatar=res.tempFilePaths;
-              that.changeAvatarUrl=true;
-              that.$apply(); 
-            }).catch(err => {
-              console.info( 'actionSheet---error---'+err );
-            });
-              
-            }else if(res.tapIndex==0){
-              Tips.chooseImage('1',['album']).then(async (res)=>{
-                that.avatar = res.tempFilePaths;
-                 that.changeAvatarUrl=true;
-                that.$apply();
-              }).catch(err => {
-                console.info( 'actionSheet---error---'+err );
-              });
-    
-            };
-        },
-        fail(res) {
-          console.log("actionSheet--error"+res.errMsg);
-          return
-        }
-      })
-    
+      Tips.chooseImage('1',['album']).then( (res)=>{
+         if(res.tempFiles[0].size>314728){
+            Tips.confirm('上传的图片不支持大于3M');
+            return false
+          };
+        Tips.compressImage(50,res.tempFilePaths[0]).then((img)=>{
+            this.avatar=img.tempFilePath;
+            this.changeAvatarUrl=true;
+            this.$apply();
+        })
+      }).catch(err => {
+        console.info( 'actionSheet---error---'+err );
+      });
     },
      
         
@@ -330,12 +311,13 @@
     }
     async onLoad(){
       this.userInfo = JSON.parse(Auth.getConfig("userInfo"));
-        this.avatar[0]=Auth.getConfig("avatarUrl");
+         Auth.getConfig("avatarUrl")?this.avatar=Auth.getConfig("avatarUrl"):this.avatar=this.userInfo.avatarUrl;
        let params={
            'OpenID':Auth.getConfig("openId")
           
        }
        this.info=await Config.getUserSetting(params);
+       this.isInit=true;
       if(this.info.RemindSign==true){
         this.chooseIcon[0].checked=true
       }else{

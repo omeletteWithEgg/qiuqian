@@ -10,7 +10,7 @@
             <text class="sub-title">更多推荐</text>
             <view class="flex-form">
                 <view class="round-tab" @tap="contactUs"><view class="iconfont icon-shuqian1"></view>联系客服</view>
-                <view  class="round-tab" @tap="joinMore"><view class="iconfont icon-shuqian1"></view>参与更多</view>
+                <view  class="round-tab" @tap="joinMore"><view class="iconfont icon-shuqian1"></view>加入更多签到</view>
             </view>
         </view>
     </view>
@@ -27,13 +27,23 @@ export default class CreateNewSign extends wepy.page  {
 
     methods = {
         createNew(){
-            this.$navigate('./addNewSign')
+             if(Object.keys(Auth.getConfig('userInfo')).length==0){
+             this.$navigate('./login')
+          }else{
+               this.$navigate('./addNewSign')
+          }
         },
         contactUs(){
+            
             Tips.toast('敬请期待','none')
         },
         joinMore(){
-           this.$navigate('./more')
+             if(Object.keys(Auth.getConfig('userInfo')).length==0){
+             this.$navigate('./login')
+          }else{
+                this.$navigate('./more')
+          }
+         
         }
     }
     onShareAppMessage(res) {
@@ -46,10 +56,8 @@ export default class CreateNewSign extends wepy.page  {
         path: '/page/index'
       }
    }
-   async onShow(){
-        // Auth.setMessageCount();//获取未读消息数量
-   }
    onLoad(){
+    
      wepy.showShareMenu({
         withShareTicket: true
       })

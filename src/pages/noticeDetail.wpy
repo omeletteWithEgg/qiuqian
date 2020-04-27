@@ -9,7 +9,7 @@ page{height:100%;overflow:hidden}
     z-index: 1;
 }
 .scroll-view-child{
-	 padding:40rpx 40rpx;
+	 padding:0rpx 40rpx;
     box-sizing: border-box;
    
   }
@@ -20,11 +20,10 @@ page{height:100%;overflow:hidden}
     padding:34rpx 26rpx 0 26rpx;
       background:#fff;
     border-radius:12rpx;
-    font-size:24rpx;
+    font-size:26rpx;
     color:#6C6C6C;
-    margin-bottom:20rpx;
     .content-wrap{
-      height:600rpx;
+      height:720rpx;
       overflow:scroll
     }
     .img-text{
@@ -36,7 +35,7 @@ page{height:100%;overflow:hidden}
      .title{
             color:#4e4e4e;
             line-height:100rpx;
-            font-size: 16px;
+            font-size: 32rpx;
             text-align:center;
         }
     
@@ -64,7 +63,7 @@ page{height:100%;overflow:hidden}
 			text-align:center;
          }
         button{
-	        font-size:24rpx;
+	        font-size:26rpx;
 	        border:none;
 	        flex:1;
 			padding:0rpx;
@@ -78,14 +77,12 @@ page{height:100%;overflow:hidden}
 </style>
 <template>
 <view class="content-view" style="height:100%;overflow:hidden">
-    <image src="{{item.BackgroundImg}}" type="widthFix" class="bg-img"></image>
+    <image src="{{BackgroundImg}}" type="widthFix" class="bg-img"></image>
     <view class="scroll-view-child">
         <view class="view-top">
             <view class="title">{{item.Title}}</view>
             <view class="img-text flex-form ">
-                <view>
                 <view class="user">{{item.SenderName}}</view>
-                </view>
                 <view class="comment-btn">{{item.CreateTime}}</view>
             </view>
             <view class="content-wrap">
@@ -105,6 +102,7 @@ page{height:100%;overflow:hidden}
 
 <script>
   import wepy from 'wepy'
+   import Auth from '../utils/auth'
 
   export default class noticeDetail extends wepy.page {
      config = {
@@ -113,18 +111,34 @@ page{height:100%;overflow:hidden}
     }
 
    data = {
-   	 item:{}
+   	 item:{},
+     BackgroundImg:''
     }
    methods = {
-   	shareWeChat(){
-   	},
+   
    	shareImg(){
 		this.$navigate('./shareImage?bgImg='+this.item.BackgroundImg+'&name='+this.item.SenderName+'&id='+this.item.GroupID+'&title='+this.item.Title+'&type=notice'+'&date='+this.item.CreateTime);
    	}
    }
+	onShareAppMessage(){
+        return {
+        title: '',
 
+        path: '/page/noticeDetail?item='+this.item // 路径，传递参数到指定页面。
+
+    }
+
+}
   onLoad(option){
-      this.item=JSON.parse(option.item);
+        if(option.query){
+            let item=JSON.parse(option.query).item;
+            item=JSON.parse(item);
+            this.item=item;
+        }else{
+            this.item=JSON.parse(option.item);
+        }
+      
+       this.BackgroundImg=Auth.getConfig('noticeBgImg');
   }
 
 }

@@ -128,7 +128,7 @@
     }
   }
   .btn-mini{
-    width:84rpx;
+    width:94rpx;
     height:36rpx;
     padding:0px;
     line-height: 32rpx;
@@ -232,11 +232,11 @@
         <view class="{{showTab1===true?'':'sub-title'}}" data-id="0" @tap="changeTab"> 签到设置</view>
         <view  class="{{showTab1===true?'sub-title':''}}"  data-id="1" @tap="changeTab"> 下载数据</view>
     </view>
-    <form wx:if="{{showTab1===true}}" class="content-wrap"  bindsubmit="saveFunc" report-submit='true'>
+    <form wx:if="{{showTab1===true}}" class="content-wrap" bindsubmit="saveFunc" >
       <view wx:if="{{isManager=='true'}}">
         <view class="bg-img-wrap">
             <button @tap="changeBg" class="btn-medium">点击更换背景图</button>
-            <image mode="aspectFill" style="width:100%;height:350rpx;display:block;" src="{{params.BackgroundURL}}"></image>
+            <image mode="scaleToFill" style="width:100%;height:350rpx;display:block;" src="{{params.BackgroundURL}}"></image>
         </view>
         <view class="form-section">
           <view class="section ">
@@ -256,7 +256,6 @@
           </view>
           <view class="section flex-form input-row" wx:if="{{radioBtn[1][0].btnStatus!=''}}">
             <view class="section-title">结束日期<!-- （持续{{groupInfo.Duration}}天） --></view>
-            <view >
               <picker
                 mode="date"
                 value="{{params.EndDate}}"
@@ -266,7 +265,6 @@
                   <view class="label-right-text">{{params.EndDate}}</view>
                   <view class=" iconfont icon-jiantou"></view>
               </picker>
-            </view>
           </view>
 
         </view>
@@ -279,7 +277,6 @@
           </view>
           <view class="section flex-form input-row" wx:if="{{radioBtn[0][0].btnStatus!=''}}">
             <view class="section-title">开始时间</view>
-            <view>
               <picker
                 mode="time"
                  name="BeginTime"
@@ -290,11 +287,9 @@
                 <view class="label-right-text">{{params.BeginTime}}</view>
                 <view class=" iconfont icon-jiantou"></view>
               </picker>
-            </view>
           </view>
           <view class="section flex-form input-row" wx:if="{{radioBtn[0][0].btnStatus!=''}}">
             <view class="section-title">结束时间</view>
-            <view>
               <picker
                   mode="time"
                   name="EndTime"
@@ -305,16 +300,13 @@
                 <view class="label-right-text">{{params.EndTime}}</view>
                 <view class=" iconfont icon-jiantou"></view>
               </picker>
-            </view>
           </view>
           <view class="section input-row  flex-form" >
             <view class="section-title">签到记录查看权限</view>
-            <view>
                 <picker bindchange="bindPickerChange" value="{{AuthIndex}}" range="{{viewArray}}">
                 <view class="picker">{{pickedText}}</view>
                  <view class=" iconfont icon-jiantou"></view>
               </picker>
-            </view>
           </view>
         </view>
         <view class="form-section input-row  flex-form" >
@@ -352,20 +344,16 @@
         <view wx:if="{{collapse}}" class="form-section">
           <view class="section flex-form input-row" >
             <view class="section-title">每天可签到次数</view>
-            <view >
               <picker bindchange="bindNumChange" value="{{params.SignTimes}}" range="{{signNumArr}}">
               <view class="picker">{{params.SignTimes}}</view>
               <view class=" iconfont icon-jiantou"></view>
             </picker>
-            </view>
           </view>
       
           <view class="form-section  ">
             <view class="section input-row  flex-form" >
               <view class="section-title">是否开启BMI值计算</view>
-              <view >
                   <view class=" iconfont icon-xuanzhong {{chooseIcon[3].checked?'':'unchecked'}}"  @tap="BMIOpen"  data-id="BMI" data-checked="{{chooseIcon[3].checked}}"></view>
-                </view>
             </view>
             <view class="section input-row  flex-form" wx:if="{{chooseIcon[3].checked}}">
               <view class="section-title">请设置BMI值</view>
@@ -377,9 +365,7 @@
           <view class="form-section  ">
             <view class="section input-row  flex-form" >
               <view class="section-title">是否开启签到口令</view>
-              <view >
                 <view class=" iconfont icon-xuanzhong {{chooseIcon[4].checked?'':'unchecked'}}" @tap="openSignRule" data-id="ifCommand" data-checked="{{chooseIcon[4].checked}}"></view>
-              </view>
             </view>
             <view class="section" wx:if="{{chooseIcon[4].checked}}">
               <input name="signToken" value="{{params.SignToken}}" class="input-row" placeholder="输入签到口令(20字以内)" bindinput="fillSignToken" />
@@ -410,9 +396,7 @@
             <view class="set-text" wx:if="{{isManager=='true'}}">上面是修改整个签到的设置，下面是修改自己的</view>
             <view class="form-section input-row  flex-form" >
               <view class="section-title">签到名字</view>
-              <view >
-                  <input name="signName" value="{{info.SignName}}" class="input-row" placeholder="输入签到的名字" bindinput="fillSignName" />
-              </view>
+                  <input name="signName" value="{{info.SignName}}" class="" placeholder="输入签到的名字" bindinput="fillSignName" />
             </view>
             <view class="set-text">设置签到提醒（必须坚持签到才会收到提醒哦）</view>
             <view class="form-section  " >
@@ -423,7 +407,6 @@
               </view>
               <view class="section input-row flex-form" wx:if="{{chooseIcon[7].checked}}">
                 <view class="section-title">每天提醒时间</view>
-                <view >
                     <picker
                     mode="time"
                     value="{{info.RemindTime=='null'?'07:00':info.RemindTime}}"
@@ -433,7 +416,6 @@
                         <view class="label-right-text">{{info.RemindTime==null?'07:00':info.RemindTime}}</view>
                         <view class=" iconfont icon-jiantou"></view>
                     </picker>
-                </view>
               </view>
               <view class="section " wx:if="{{chooseIcon[7].checked}}">
                   <view class="section-title  input-row">设置重复提醒</view>
@@ -448,9 +430,10 @@
               <view class=" iconfont  {{chooseIcon[8].checked?'icon-xuanzhong':'icon-circle'}}" @tap="commentOpen" data-id="ifCommandNotice" data-checked="{{chooseIcon[8].checked}}"></view>
                
            </view>
+          
         </view>
       <text class="sub-text rules">确认即表示已同意《微信公众平台服务协议》</text>
-      <button class="btn-large" form-type="submit">保存</button>
+      <button class="btn-large" form-type="submit" >保存</button>
     </form>
     <view class="content-wrap">
        <view class="content-view" wx:if="{{showTab1===false}}"> 
@@ -574,12 +557,6 @@
     openSignRule(e){
       let dataId = e.currentTarget.dataset.id;
       this.changeBtnStatus(this.signRuleMust,dataId)
-      // this.chooseIcon.forEach((i)=>{
-      //   if(i.name==dataId){
-      //     i.checked = !i.checked;
-      //     i.checked? this.signRuleMust=true: this.signRuleMust=false;
-      //   }
-      // });
       this.$apply()
      },
        fillSignToken(e){
@@ -604,26 +581,11 @@
      noticeOpen(e){
       let dataId = e.currentTarget.dataset.id;
       this.changeBtnStatus(this.noticeMust,dataId)
-
-      // this.chooseIcon.forEach((i)=>{
-      //   if(i.name==dataId){
-      //     i.checked = !i.checked;
-      //      this.noticeMust=i.checked
-      //   }
-      // });
         this.$apply()
      },
      commentOpen(e){
       let dataId = e.currentTarget.dataset.id;
       this.changeBtnStatus( this.info.RemindComment,dataId)
-
-      // this.chooseIcon.forEach((i)=>{
-      //   if(i.name==dataId){
-      //     i.checked = !i.checked;
-      //     this.info.RemindComment=i.checked;
-          
-      //   }
-      // });
         this.$apply()
      },
      BMIOpen(e){
@@ -639,7 +601,7 @@
                 weight=1
               }
             });
-             this.params.Properties.Properties.findIndex((item)=>{
+             this.params.Properties.Properties.forEach((item)=>{
                if(item.PropertyName=='Height'){
                  height=1
                }
@@ -668,17 +630,10 @@
      transmitCheck(e){
         let dataId = e.currentTarget.dataset.id;
       this.changeBtnStatus(this.params.CanTransmit,dataId)
-
-        // this.chooseIcon.forEach((i)=>{
-        // if(i.name==dataId){
-        //   i.checked = !i.checked;
-        //   this.params.CanTransmit=i.checked
-        // }
-      // });
       this.$apply()
      },
      async titleValidate(e){
-      if(e.detail.value=='')return;
+      if(e.detail.value==''||e.detail.value==this.params.GroupTitle)return;
       let res = await Config.isExist({'GroupTitle':e.detail.value});
       this.titleExsit=res;
       if(res===true){
@@ -702,16 +657,29 @@
     changeBg(event){
       const that = this;
       Tips.chooseImage('1',['album','camera']).then( (res)=>{
-         wx.uploadFile({
-          url:Config.baseUrl+'/group/img?GroupID='+this.optionId,
-          filePath: res.tempFilePaths[0],
-          name: 'files[]',
-          success: (res) => {
-            that.params.BackgroundURL = res.data.replace(/\"/g,"");
-             that.$apply();
+          if(res.tempFiles[0].size>314728){
+            Tips.confirm('上传的图片不支持大于3M');
+            return false
+
           }
-        });
-       
+        wx.showLoading({title:"压缩中..."});
+
+        Tips.compressImage(50, res.tempFilePaths[0]).then((img)=>{
+           wx.uploadFile({
+              url:Config.baseUrl+'/group/img?GroupID='+this.optionId,
+              filePath: img.tempFilePath,
+              name: 'files[]',
+              success:function (compressImage){
+                 wx.hideLoading();
+                that.params.BackgroundURL = compressImage.data.replace(/\"/g,"");
+                that.$apply();
+              },
+              fail:function(error){
+                console.log('upload--fail--'+JSON.stringify(error))
+              }
+            });
+        })
+
       }).catch(err => {
         console.info( 'actionSheet---error---'+err );
       });
@@ -719,11 +687,23 @@
      setDate(event){
        let index=event.currentTarget.dataset.index;
        let id=event.currentTarget.dataset.id;
-       this.radioBtn[index].forEach(item => {
+
+       this.radioBtn[index].forEach((item,itemIndex) => {
          item.btnStatus='btn-outline';
          if(item.id==event.currentTarget.dataset.id){
            item.btnStatus=''
          }
+        if(index==0&&item.text=="永久"&&item.btnStatus==''){
+          this.params.IsTimeAllDay = true;
+          this.params.BeginTime = "00:00:00";
+          this.params.EndTime = "23:59:59";
+        }else  if(index==1&&item.text=="永久"&&item.btnStatus==''){
+          this.params.IsDateForever = true;
+        }else  if(index==0&&item.text=="自定义"&&item.btnStatus==''){
+          this.params.IsTimeAllDay = false;
+        }else  if(index==1&&item.text=="自定义"&&item.btnStatus==''){
+          this.params.IsDateForever = false;
+        }
        });
      },
       bindNumChange(e){
@@ -806,10 +786,10 @@
           }
         });
      },
-  
-     
+       
     async saveFunc(e){
       let value=e.detail.value;
+      console.log(JSON.stringify(value))
       if(this.params.IsManage!=false){
         if(value.GroupTitle==''){
            Tips.toast("请输入签到标题",'none');
@@ -850,7 +830,7 @@
                 weight=1
               }
               });
-              this.params.Properties.Properties.findIndex((item)=>{
+              this.params.Properties.Properties.forEach((item)=>{
                 if(item.PropertyName=='Height'){
                   height=1
                 }
@@ -869,13 +849,13 @@
                form.push(item.value);
             });
            this.params.SignForm=form.join('').replace(/,/g,'');
-            console.log('this.params.EndDate---=====>>>>>'+this.params.EndDate)
             let params={
               'BeginDate':this.params.BeginDate+' '+this.params.BeginTime,
               'EndDate':this.params.EndDate+' '+this.params.EndTime,
               'BeginTime':this.params.BeginDate+' '+this.params.BeginTime,
               'EndTime':this.params.EndDate+' '+this.params.EndTime,
               'SignForm':this.params.SignForm,
+              'BackgroundURL':this.params.BackgroundURL,
               'SignToken':this.params.SignToken?this.params.SignToken:'',
               'PropertiesStr':JSON.stringify({'Properties':this.params.Properties.Properties}),
             };
@@ -883,9 +863,7 @@
            await Config.updateGroup(params);
           }
         }
-        if(this.params.RemindSign==true){
           this.selectedReaptNum=this.selectedReaptNum.toString().replace(/\,/g,"");
-        }
         let userParams={
            OpenID:Auth.getConfig("openId"),
            GroupID:this.params.GroupID,
@@ -899,18 +877,17 @@
           let userResult= await Config.userSetting(userParams);
         };
         Tips.toast('修改成功');
+        
          let pages = getCurrentPages();
         let prevPage = pages[pages.length - 2]; 
-        setTimeout(()=>{
           Auth.backOpener({},()=>{
              prevPage.initData();
+             prevPage.loadList()
           })
-        },500)
-
        }
    }
   async initData(){
-     this.data.chooseIcon.forEach((item)=>{
+     this.chooseIcon.forEach((item)=>{
       //  if(item.name=='Money'){
       //     this.params.Money>0?item.checked=true:item.checked=false;
       //     this.params.Money>0?this.chooseIcon[0].checked=true:this.chooseIcon[0].checked=false;
@@ -924,16 +901,16 @@
        }
        if(item.name=='BMI'){
           this.params.BMI>0?item.checked=true:item.checked=false;
-          // this.params.BMI>0?this.chooseIcon[3].checked=true:this.chooseIcon[3].checked=false;
        }
        if(item.name=='ifCommand'){//签到口令
+       console.log(this.params.SignToken)
           this.params.SignToken!='null'?item.checked=true:item.checked=false
        }
   
      });
       let start = new Date(this.params.BeginDate).getTime();
       let end = new Date(this.params.EndDate).getTime();
-      if(parseInt(end)-parseInt(start)>160704000000){
+      if(this.params.IsDateForever){
         this.radioBtn[1][0].btnStatus='';
         this.radioBtn[1][1].btnStatus='btn-outline';
       }else{
@@ -941,23 +918,26 @@
         this.radioBtn[1][1].btnStatus='';
       }
       this.params.SignForm=this.params.SignForm.split('');
-      this.data.tagBtn.forEach((item,index)=>{
-        this.data.tagBtn[index].value=this.params.SignForm[index];
+      this.tagBtn.forEach((item,index)=>{
+        this.tagBtn[index].value=this.params.SignForm[index];
       })
-      this.params.AllCanSee=='true'?this.data.pickedText='所有人可见':this.data.pickedText='仅签到小组成员可见';
-      if(this.params.BeginTime!='00:00:00'|| this.params.EndTime!='23:59:00'){
-        this.radioBtn[0][0].btnStatus='btn-outline';
-        this.radioBtn[0][1].btnStatus='';
-      }else{
+      this.params.AllCanSee==true?this.AuthIndex=0:this.AuthIndex=1;
+      this.params.AllCanSee==true?this.pickedText='所有人可见':this.pickedText='仅小组成员可见';
+
+      console.log(this)
+      if(this.params.IsTimeAllDay){
+       
         this.radioBtn[0][0].btnStatus='';
         this.radioBtn[0][1].btnStatus='btn-outline';
+      }else{
+         this.radioBtn[0][0].btnStatus='btn-outline';
+        this.radioBtn[0][1].btnStatus='';
       } 
       this.params.EndDate = this.params.EndDate.replace(/\.|\-/g, '/')
       this.params.EndTime = this.params.EndTime.replace(/\.|\-/g, '/')
       this.params.BeginTime = this.params.BeginTime.replace(/\.|\-/g, '/')
       this.params = Object.assign({}, this.params,this.groupInfo);
-          
-        //  this.$apply();
+      this.$apply()
   }
   async infoData(){
    //个人签到设置内容
@@ -986,6 +966,7 @@
         }
       });
   }
+ 
    onShow(){
     let pages = getCurrentPages();
     let currPage = pages[pages.length - 1];

@@ -116,7 +116,7 @@
 }
 </style>
 <template>
-<view style="height:100%;padding:20rpx 30rpx;">
+<view style="padding:20rpx 30rpx;">
 <Comments 
   :content.sync="groupInfo" 
   :showTop="showTop"
@@ -176,11 +176,6 @@
       'text':'评论',
         'url':'./postCommet'
      },{
-      'icon':'icon-zhuanfa',
-      'text':'分享',
-        'url':'./shareImage',
-       'favorite':false
-     },{
       'icon':'icon-shanchu',
       'text':'删除',
         'url':''
@@ -198,7 +193,7 @@
      listBtnClickFunc(id){
     
         if(this.commentsBtnList[id.id].url!=''){
-          this.$root.$navigate(this.commentsBtnList[id.id].url+'?msg='+JSON.stringify(id.msg)+'&userInfo='+JSON.stringify(this.userSetting)+"&type=1&groupInfo="+JSON.stringify(this.groupInfo)+"&id="+this.optionId+'&bgImg='+this.bgImg+'&name='+this.groupInfo.NickName+'&title='+this.groupTitle+'&date='+this.date);
+          this.$root.$navigate(this.commentsBtnList[id.id].url+'?msg='+JSON.stringify(id.msg)+'&userInfo='+JSON.stringify(this.userSetting)+"&type=1&groupInfo="+JSON.stringify(this.groupInfo)+"&id="+this.optionId);
         }else{
           this.deleteModalShow=true;
         }
@@ -215,27 +210,32 @@
             this.groupInfo.IsPraised=false;
               this.$apply()
           }
+          
           this.$broadcast('favoriteChange',this.groupInfo.IsPraised)
         
         }
     },
-  
     async deleteMsg(){
-      await Config.deleteMessage('?SignID='+this.groupInfo.SignID+'&GroupID='+this.optionId+'&OpenID='+this.groupInfo.OpenID+'&AdminOpenID='+Auth.getConfig('openId'));
-      this.$apply();
+      const res = await Config.deleteMessage('?SignID='+this.groupInfo.SignID+'&GroupID='+this.optionId+'&OpenID='+this.groupInfo.OpenID+'&AdminOpenID='+Auth.getConfig('openId'));
+      if(!res) return
       this.groupInfo={};
       this.deleteModalShow=false;
       Tips.toast('删除成功');
        Auth.backOpener();
        this.backType='commentDetailDelete'
+     this.$apply();
+
     },
     async deleteMsgFunc(msg){//删除评论回复
       let type=msg.type;
       if(type=='1'){//回复
-        this.$navigate('./postCommet?id='+this.optionId+'&type=2&msg='+JSON.stringify(msg.msgId)+"&groupInfo="+JSON.stringify(this.groupInfo))
+        this.$navigate('./postCommet?id='+this.optionId+'&type=2&userInfo='+JSON.stringify(this.userSetting)+'&msg='+JSON.stringify(msg.msgId)+"&groupInfo="+JSON.stringify(this.groupInfo))
       }else if(type=='2'){//删除
        let res=await Config.deleteMessage('?SignID='+msg.signId+'&GroupID='+this.optionId+'&OpenID='+msg.openId+'&messageID='+msg.msgId.MessageID+'&AdminOpenID='+Auth.getConfig('openId'));
+        if(!res) return
+        
         Tips.toast('删除成功');
+       
         this.groupInfo['Messages'].splice(this.groupInfo['Messages'].findIndex(sbitem=>sbitem.MessageID==msg.msgId.MessageID),1);
         this.$apply();
       }
@@ -256,7 +256,6 @@
           console.log(res.errMsg)
       });
       innerAudioContext.onEnded((res) => {
-        console.log('结束播放');
         this.groupInfo.SoundRecordingsList[e.index].animation=''
         this.$apply()
       });
@@ -280,6 +279,7 @@
       });
     }
     onLoad(option){
+      console.log(option)
       this.groupInfo=JSON.parse(option.groupInfo);
       this.groupInfo.showMore=false;
       let isManager=option.isManager;
@@ -288,18 +288,20 @@
           'icon':'icon-liuyan',
           'text':'评论',
             'url':'./postCommet'
-         },{
-          'icon':'icon-zhuanfa',
-          'text':'分享',
-            'url':'./shareImage',
-           'favorite':false
-         }];
+         }
+        //  ,{
+        //   'icon':'icon-zhuanfa',
+        //   'text':'分享',
+        //     'url':'./shareImage',
+        //    'favorite':false
+        //  }
+         ];
       };
-      this.bgImg=option.bgImg;
-      this.groupTitle=option.title;
+      // this.bgImg=option.bgImg;
+      // this.groupTitle=option.title;
       this.optionId=option.id;
       this.userSetting=JSON.parse(option.userInfo);
-      this.date=option.date;
+      // this.date=option.date;
       parseInt(this.groupInfo.PraiseTimes)>999?this.groupInfo.PraiseTimes='999+':this.groupInfo.PraiseTimes=this.groupInfo.PraiseTimes;
    }
   }

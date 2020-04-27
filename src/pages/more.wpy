@@ -11,7 +11,6 @@
     flex-direction: column;
     align-items: center;
   }
-
   .userinfo-avatar {
     width: 80rpx;
     height: 80rpx;
@@ -108,9 +107,6 @@
           item.iconstatus= 'in';
         }
       },
-
-       
-
     }
     onPullDownRefresh(e){
        this.pageIndex=1;
@@ -132,6 +128,10 @@
         'pageSize':10
       }
       let data=await Config.allGroup(params);
+       if(data.serverCode){
+        this.pageIndex--;
+        return
+      }
       if(data.Count==0){
         this.hasMore=false;
          this.loadMoreText='暂无更多数据';
@@ -146,8 +146,6 @@
       }
       this.list.forEach((item)=>{
         this.methods.calcStatus(item);
-        // item.BeginDate=item.BeginDate.match(/(\S*)T/)[1];
-        // item.EndDate=item.EndDate.match(/(\S*)T/)[1];
       })
       this.$apply();
     }

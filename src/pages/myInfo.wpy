@@ -1,0 +1,104 @@
+
+<style lang="less" scoped>
+.img-wrap{
+  width:150rpx;
+  height: 150rpx;
+  margin: 20px auto
+}
+.text-center{
+  text-align: center
+}
+.form-section{
+  margin-bottom:20rpx;
+
+  .input-row-right{
+      .input-row{
+        border-top:0
+      }
+  }
+
+  
+ 
+}
+  .section-title{
+    font-size:28rpx;
+    color:#000
+  }
+
+
+</style>
+<template>
+<view>
+            <view class="form-section " >
+                <view class="img-wrap"  >
+                <image  style="width:150rpx;height:150rpx;border-radius:100%;" mode="scaleToFill" src="{{avatarUrl}}" > </image>
+                
+                </view>
+                 <view class="text-center">
+                  {{userName}}
+                </view>
+              </view>
+           
+            <view class="section input-row  flex-form" >
+              <view class="section-title">签到名称</view>
+              <view class="input-row-right">
+                  {{info.SignName}}
+              </view>
+          </view>
+          
+           <view class="form-section  " >
+            <view class="section input-row flex-form">
+
+              <view class="section-title">签到提醒时间</view>
+              <view class="label-right-text">{{info.RemindTime?info.RemindTime:''}}</view>
+            </view>
+           
+          </view>
+           <view class="form-section input-row flex-form">
+               <view class="section-title">是否开启了评论消息提醒</view>
+              <view>
+                 {{ifCommentNotice?'是':'否'}}
+              </view>
+               
+           </view>
+          </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+   import Auth from '../utils/auth'
+  import Config from '../utils/config'
+  
+
+  export default class editInfo extends wepy.page {
+     config = {
+      navigationBarTitleText: '我的名片'
+    }
+   data = {
+     info:{},
+     avatarUrl:'',
+     userName:'',
+     ifCommentNotice:false,
+     
+   }
+     
+    async onLoad(option){
+      this.avatarUrl = option.avatarUrl;
+      this.userName = option.userName;
+       let params={
+           'OpenID':Auth.getConfig("openId")
+          
+       }
+       this.info=await Config.getUserSetting(params);
+     
+      if(this.info.RemindComment==true){
+        this.ifCommentNotice=true
+      }else{
+        this.ifCommentNotice=false
+      };
+     
+       this.$apply()
+    }
+  }
+</script>
+

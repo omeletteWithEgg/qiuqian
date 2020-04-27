@@ -97,7 +97,7 @@
         <block>
             <view class="items {{extraClass}}" @tap="seeDetail" data-id="{{id}}" data-index="{{index}}" data-status="{{status}}">
                 <view class="main-content">
-                    <image class="bg-img" style="width: 100%; height:{{imgheight}};border-radius:12rpx;display:block" mode="scaleToFill" src="{{bgImg}}"> </image>
+                    <image class="bg-img" style="width: 100%; height:{{imgheight}};border-radius:12rpx;display:block" mode="scaleToFill" src="{{bgImg}}" binderror='avatarErrorFunc'> </image>
                     <text class="status {{iconstatus}}"  wx:if="{{status}}">{{status}}</text>
                     <text class="iconfont icon-cha" wx:if="{{righticon}}" @tap.stop="deleteItem" data-id="{{id}}"  data-index="{{index}}"></text>
                     <view class="list-info" wx:if="{{imgtext}}">
@@ -111,7 +111,7 @@
                         <image class="head-img" style="width:30px; height: 30px;border-radius:100%; " mode="scaleToFill" src="{{headerImg}}"> </image>
                         <text class="nick-name">{{nickname}}</text>
                     </view>
-                    <view class="bottom-right {{iconstatus}}"  wx:if="{{status}}"><text class="iconfont icon-wode"></text><text >{{bottomtext}}</text></view>
+                    <view class="bottom-right {{iconstatus}}"><text class="iconfont icon-wode"></text><text >{{bottomtext}}</text></view>
                 </view>
                 <view class="bottom-content opacity"  wx:if="{{bottomcontext=='false'}}">
                     <view class="bottom-left">
@@ -223,6 +223,9 @@ export default class indexList extends wepy.component{
             let deleteId = e.currentTarget.dataset.id;
             let index = e.currentTarget.dataset.index;
             this.$emit('deleteItem',{'id':deleteId,'index':index})
+        },
+         avatarErrorFunc(error){
+          console.log('头像下载错误==='+JSON.stringify(error))
         }
      
     }
